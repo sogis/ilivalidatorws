@@ -103,10 +103,11 @@ public class App implements EntryPoint {
                 .element();
         container.appendChild(logoDiv);
 
+        // Title
         container.appendChild(div().css("ilivalidatorws-title").textContent("ilivalidator web service").element());
 
+        // Info
         String infoString = "Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr.";
-
         container.appendChild(div().css("info").innerHtml(SafeHtmlUtils.fromTrustedString(infoString)).element());
         
         
@@ -176,6 +177,9 @@ public class App implements EntryPoint {
                             // showElapsed();
                             console.log("fubar: " + jobUrl);
                             
+                            // Statt "fetch" wird XMLHttpRequest verwendet. 
+                            // Diese Klasse erlaubt den Request NICHT asyncron
+                            // zu machen.
                             XMLHttpRequest httpRequest = new XMLHttpRequest();
                             httpRequest.open("GET", jobUrl, false);
                             httpRequest.onload = event -> {
