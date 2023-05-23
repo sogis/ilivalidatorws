@@ -1,4 +1,4 @@
-package ch.so.agi.ilivalidator;
+package ch.so.agi.ilivalidator.controller;
 
 import javax.annotation.PostConstruct;
 
@@ -11,6 +11,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import ch.so.agi.ilivalidator.Settings;
 
 @RestController
 public class MainController {
