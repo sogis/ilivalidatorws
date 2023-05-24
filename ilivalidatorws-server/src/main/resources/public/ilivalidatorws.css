@@ -51,7 +51,7 @@ body, div {
 }
 
 .ilivalidatorws-title {
-    margin-top: 120px;
+    margin-top: 80px;
     font-size: 40px;
     font-weight: 700;
 }
@@ -77,6 +77,59 @@ a.default-link:visited {
     color: #c62828; 
     text-decoration: underline !important;
 }  
+
+#upload-form {
+	margin-top: 30px;
+}
+
+input[type=file] {
+    width: 450px;
+    max-width: 100%;
+    font-size: 16px;
+}
+
+input[type=file]::file-selector-button {
+    margin-right: 20px;
+    border: none;
+    background: #efefef;
+    padding: 10px 20px;
+    border-radius: 5px;
+    color: #333333;
+    cursor: pointer;
+    transition: background .2s ease-in-out;
+}
+
+input[type=file]::file-selector-button:hover {
+    background: #e5e5e5;
+}
+
+.submit-button {
+    font-size: 16px;
+    background-color: #cc0000; 
+    border: none;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 5px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    cursor: pointer;
+    transition: background .2s ease-in-out;
+}
+
+button[disabled].submit-button {
+    background-color: wheat;
+    cursor: wait;
+} 
+
+
+#protocol-container {
+	margin-top: 20px;
+	border: 1px solid red;
+	border-radius: 5px;
+}
+
+
 
 #search-panel {
     margin-top: 40px;

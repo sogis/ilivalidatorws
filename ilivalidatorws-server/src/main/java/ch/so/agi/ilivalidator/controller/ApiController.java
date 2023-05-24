@@ -29,7 +29,7 @@ public class ApiController {
     
     private int counter=0;
     
-    @PostMapping(value="/rest/jobs", consumes = {"multipart/form-data"})
+    @PostMapping(value="/api/sjobs", consumes = {"multipart/form-data"})
     public ResponseEntity<?> uploadFile(@RequestParam(name="file", required=true) @RequestBody MultipartFile file) {
         
         Path uploadedFile = fileStorageService.store(file);        
@@ -51,7 +51,7 @@ public class ApiController {
     }
     
     
-    @PostMapping(value="/rest/sjobs", consumes = {"multipart/form-data"})
+    @PostMapping(value="/api/jobs", consumes = {"multipart/form-data"})
     public ResponseEntity<?> uploadFiles(@RequestParam(name="files", required=true) @RequestBody MultipartFile[] files) {
         log.debug("number of files: {}", files.length);
         
@@ -72,12 +72,12 @@ public class ApiController {
         
         return ResponseEntity
                 .accepted()
-                .header("Operation-Location", getHost()+"/rest/jobs/"+jobId)
+                .header("Operation-Location", getHost()+"/api/jobs/"+jobId)
                 .body(null);        
     }
     
     
-    @GetMapping("/rest/singlejobs/{jobId}")
+    @GetMapping("/api/jobs/{jobId}")
     public ResponseEntity<?> getJobById(@PathVariable String jobId) {
         log.debug("jobId: {}", jobId);
 

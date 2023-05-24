@@ -24,6 +24,7 @@ import org.dominokit.domino.ui.grid.Row;
 import org.dominokit.domino.ui.icons.Icons;
 import org.dominokit.domino.ui.infoboxes.InfoBox;
 import org.dominokit.domino.ui.modals.ModalDialog;
+import org.dominokit.domino.ui.preloaders.Preloader;
 import org.dominokit.domino.ui.style.Color;
 import org.dominokit.domino.ui.style.ColorScheme;
 import org.dominokit.domino.ui.tabs.Tab;
@@ -67,7 +68,7 @@ public class App implements EntryPoint {
     private NumberFormat fmtPercent = NumberFormat.getFormat("#0.0");
 
 //    private static final String API_PATH_UPLOAD = "rest/jobs";
-    private static final String API_PATH_UPLOAD = "rest/jobs";
+    private static final String API_PATH_UPLOAD = "api/jobs";
     private static final String HEADER_OPERATION_LOCATION = "Operation-Location";
     
     private Timer apiTimer;
@@ -111,13 +112,15 @@ public class App implements EntryPoint {
         container.appendChild(div().css("info").innerHtml(SafeHtmlUtils.fromTrustedString(infoString)).element());
         
         
-        HTMLDivElement protocolContainer = div().id("protocolContainer").element();
+        HTMLDivElement protocolContainer = div().id("protocol-container").element();
+        protocolContainer.innerHTML = "adsf <br> adf";
         
         HTMLFormElement form = (HTMLFormElement) document.createElement("form");
+        form.id = "upload-form";
         form.enctype = "multipart/form-data";
         form.action = "";
         
-        body().add(form);
+        container.appendChild(form);
         
         HTMLInputElement input = (HTMLInputElement) document.createElement("input");
         input.setAttribute("type", "file");
@@ -128,6 +131,7 @@ public class App implements EntryPoint {
         form.appendChild(input);
 
         HTMLButtonElement button = (HTMLButtonElement) document.createElement("button");
+        button.className = "submit-button";
         button.textContent = "Submit";
         form.appendChild(button);
         
@@ -145,6 +149,10 @@ public class App implements EntryPoint {
 //                    
 //                }
                  
+                input.disabled = true;
+                button.disabled = true;
+                //form.appendChild(Preloader.create().element());
+                
                 //File file = input.files.getAt(0);
                 for (int i=0; i<input.files.length; i++) {
                     File file = input.files.getAt(i);
@@ -230,9 +238,7 @@ public class App implements EntryPoint {
             }
         });
         
-        body().add(protocolContainer);
+        container.appendChild(protocolContainer);
 
-//        body().add(div().id(MAP_DIV_ID));
-//        map = MapPresets.getBlakeAndWhiteMap(MAP_DIV_ID);
     }    
 }
