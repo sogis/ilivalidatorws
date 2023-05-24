@@ -26,14 +26,22 @@ spring:
     devtools:
         restart:
             additional-exclude: launcherDir/**
+  servlet:
+    multipart:
+      max-file-size: ${MAX_FILE_SIZE:300}MB
+      max-request-size: ${MAX_FILE_SIZE:300}MB
 
 management:
-    health:
-        probes:
-            enabled: true
+  health:
+    probes:
+      enabled: true
     endpoint:
-        health: 
-            show-details: always
+      health: 
+        show-details: always
+        livenessState:
+          enabled: true
+        readinessState:
+          enabled: true
 
 # spring:
 #     profiles:
@@ -42,6 +50,7 @@ management:
 # ========================
 # APPLICATION
 # ========================   
+  
 lucene:
     queryDefaultRecords: ${LUCENE_QUERY_DEFAULT_RECORDS:10}
     queryMaxRecords: ${LUCENE_QUERY_MAX_RECORDS:50}

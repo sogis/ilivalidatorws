@@ -67,13 +67,20 @@ public class App implements EntryPoint {
     private NumberFormat fmtDefault = NumberFormat.getDecimalFormat();
     private NumberFormat fmtPercent = NumberFormat.getFormat("#0.0");
 
+    private static int MAX_FILES_SIZE_MB = 300; 
+    
 //    private static final String API_PATH_UPLOAD = "rest/jobs";
     private static final String API_PATH_UPLOAD = "api/jobs";
     private static final String HEADER_OPERATION_LOCATION = "Operation-Location";
     
     private Timer apiTimer;
     private static final int API_REQUEST_PERIOD_MILLIS = 2000;
-
+    
+    private HTMLFormElement form;
+    private HTMLInputElement input;
+    private HTMLButtonElement button;
+    private HTMLDivElement protocolContainer;
+    
     public void onModuleLoad() {
         init();
     }
@@ -112,27 +119,25 @@ public class App implements EntryPoint {
         container.appendChild(div().css("info").innerHtml(SafeHtmlUtils.fromTrustedString(infoString)).element());
         
         
-        HTMLDivElement protocolContainer = div().id("protocol-container").element();
+        protocolContainer = div().id("protocol-container").element();
         protocolContainer.innerHTML = "adsf <br> adf";
         
-        HTMLFormElement form = (HTMLFormElement) document.createElement("form");
+        form = (HTMLFormElement) document.createElement("form");
         form.id = "upload-form";
         form.enctype = "multipart/form-data";
-        form.action = "";
-        
+        form.action = "";        
         container.appendChild(form);
         
-        HTMLInputElement input = (HTMLInputElement) document.createElement("input");
+        input = (HTMLInputElement) document.createElement("input");
         input.setAttribute("type", "file");
-//        input.setAttribute("name", "file");
         input.setAttribute("name", "files");
         input.multiple = true;
         input.accept = ".itf,.xtf,.xml";
         form.appendChild(input);
 
-        HTMLButtonElement button = (HTMLButtonElement) document.createElement("button");
+        button = (HTMLButtonElement) document.createElement("button");
         button.className = "submit-button";
-        button.textContent = "Submit";
+        button.textContent = "Submit"; // TODO i18n
         form.appendChild(button);
         
         form.addEventListener("submit", new EventListener() {
@@ -140,28 +145,35 @@ public class App implements EntryPoint {
             public void handleEvent(Event evt) {
                 evt.preventDefault();
                 
-                FormData formData = new FormData();
+                if (input.files.length < 1) {
+                    return;
+                }
                 
-                //console.log(input.files[0]);
-                // TODO
-                // testen, ob file vorhanden.
-//                if () {
-//                    
-//                }
-                 
+                button.textContent = "Validating..."; // TODO i18n
+
                 input.disabled = true;
                 button.disabled = true;
                 //form.appendChild(Preloader.create().element());
                 
-                //File file = input.files.getAt(0);
+                FormData formData = new FormData();
+
+                int filesSize = 0;
                 for (int i=0; i<input.files.length; i++) {
                     File file = input.files.getAt(i);
+                    // Falls Safari Probleme macht:
+                    // https://github.com/hal/console/blob/d435e24a837adedbd6aefe06495eafaa97c08a65/dmr/src/main/java/org/jboss/hal/dmr/dispatch/Dispatcher.java#L263
                     formData.append("files", AppendValueUnionType.of(file), file.name);
+                    filesSize += file.size;
+                    console.log(filesSize);
+                    int filesSizeMb = filesSize / 1024 / 1024;
+                    if (filesSizeMb > MAX_FILES_SIZE_MB) {
+                        // TODO log to protocol
+                        protocolContainer.appendChild(div().textContent("zu gross").element());
+                        resetInputElements();
+                        return;
+                    }
                 }
-                
-                //formData.append("file", AppendValueUnionType.of(file), file.name);
 
-                
                 RequestInit init = RequestInit.create();
                 init.setMethod("POST");
                 init.setBody(formData);
@@ -171,6 +183,10 @@ public class App implements EntryPoint {
                 DomGlobal.fetch(API_PATH_UPLOAD, init)
                 .then(response -> {
                     if (!response.ok) {
+                        resetInputElements();
+                        
+                        // TODO log to protocol..
+                        
                         return null;
                     }
                     String jobUrl = response.headers.get(HEADER_OPERATION_LOCATION);
@@ -193,10 +209,15 @@ public class App implements EntryPoint {
                             httpRequest.onload = event -> {
                                 if (httpRequest.status == 200) {
                                     console.log(httpRequest.responseText);
+                                    
+                                    
+                                    
                                     if (httpRequest.responseText.equalsIgnoreCase("SUCCEEDED")) {
                                         console.log("cancel timer");
                                         apiTimer.cancel();
                                         
+                                        resetInputElements();
+
                                         protocolContainer.innerHTML = "downloade mich";
                                     }
                                     
@@ -230,15 +251,21 @@ public class App implements EntryPoint {
 //                })
                 .catch_(error -> {
                     console.log(error);
+                    // TODO log to protocol
+                    resetInputElements();
                     return null;
                 });
-                
-                form.reset();
-                
             }
         });
         
         container.appendChild(protocolContainer);
 
     }    
+    
+    private void resetInputElements() {
+        form.reset();
+        input.disabled = false;
+        button.disabled = false;
+        button.textContent = "Submit"; // TODO i18n
+    }
 }
