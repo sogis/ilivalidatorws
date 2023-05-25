@@ -59,6 +59,8 @@ import elemental2.dom.RequestInit;
 import elemental2.dom.XMLHttpRequest;
 
 public class App implements EntryPoint {
+    // Internationalization
+    private MyMessages messages = GWT.create(MyMessages.class);
 
     // Application settings
     private String myVar;
@@ -118,10 +120,11 @@ public class App implements EntryPoint {
         String infoString = "Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr.";
         container.appendChild(div().css("info").innerHtml(SafeHtmlUtils.fromTrustedString(infoString)).element());
         
-        
+        // Protocol
         protocolContainer = div().id("protocol-container").element();
         protocolContainer.innerHTML = "adsf <br> adf";
         
+        // Form incl business logic
         form = (HTMLFormElement) document.createElement("form");
         form.id = "upload-form";
         form.enctype = "multipart/form-data";
@@ -153,18 +156,19 @@ public class App implements EntryPoint {
 
                 input.disabled = true;
                 button.disabled = true;
-                //form.appendChild(Preloader.create().element());
                 
                 FormData formData = new FormData();
 
+                List<String> fileNames = new ArrayList<>();
                 int filesSize = 0;
                 for (int i=0; i<input.files.length; i++) {
                     File file = input.files.getAt(i);
+                    fileNames.add(file.name);
                     // Falls Safari Probleme macht:
                     // https://github.com/hal/console/blob/d435e24a837adedbd6aefe06495eafaa97c08a65/dmr/src/main/java/org/jboss/hal/dmr/dispatch/Dispatcher.java#L263
                     formData.append("files", AppendValueUnionType.of(file), file.name);
                     filesSize += file.size;
-                    console.log(filesSize);
+                    //console.log(filesSize);
                     int filesSizeMb = filesSize / 1024 / 1024;
                     if (filesSizeMb > MAX_FILES_SIZE_MB) {
                         // TODO log to protocol
@@ -174,6 +178,10 @@ public class App implements EntryPoint {
                     }
                 }
 
+                for (String fileName : fileNames) {
+                    logToClient(messages.uploadFile(fileName));                    
+                }
+                
                 RequestInit init = RequestInit.create();
                 init.setMethod("POST");
                 init.setBody(formData);
@@ -197,10 +205,7 @@ public class App implements EntryPoint {
                     }
                     
                     apiTimer = new Timer() {
-                        public void run() {
-                            // showElapsed();
-                            console.log("fubar: " + jobUrl);
-                            
+                        public void run() {                          
                             // Statt "fetch" wird XMLHttpRequest verwendet. 
                             // Diese Klasse erlaubt den Request NICHT asyncron
                             // zu machen.
@@ -261,6 +266,10 @@ public class App implements EntryPoint {
         container.appendChild(protocolContainer);
 
     }    
+    
+    private void logToClient(String fileName) {
+        console.log(fileName);
+    }
     
     private void resetInputElements() {
         form.reset();

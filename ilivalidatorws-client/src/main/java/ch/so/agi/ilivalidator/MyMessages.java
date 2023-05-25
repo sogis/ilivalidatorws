@@ -8,4 +8,7 @@ public interface MyMessages extends Messages {
     
     @DefaultMessage("Füü {0} bar {1}")
     String yinyang(String yin, String yang);
+    
+    @DefaultMessage("{0} wird hochgeladen ...") 
+    String uploadFile(String fileName);
 }
