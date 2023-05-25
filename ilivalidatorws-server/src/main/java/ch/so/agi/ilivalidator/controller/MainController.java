@@ -18,11 +18,11 @@ import ch.so.agi.ilivalidator.Settings;
 public class MainController {
     private final Logger log = LoggerFactory.getLogger(this.getClass());
 
-    @Value("${lucene.queryDefaultRecords}")
-    private Integer QUERY_DEFAULT_RECORDS;
-
-    @Value("${lucene.queryMaxRecords}")
-    private Integer QUERY_MAX_RECORDS;   
+//    @Value("${lucene.queryDefaultRecords}")
+//    private Integer QUERY_DEFAULT_RECORDS;
+//
+//    @Value("${lucene.queryMaxRecords}")
+//    private Integer QUERY_MAX_RECORDS;   
 
     @Autowired
     Settings settings;

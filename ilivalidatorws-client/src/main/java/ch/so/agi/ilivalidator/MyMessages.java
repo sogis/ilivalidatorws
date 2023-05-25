@@ -9,6 +9,18 @@ public interface MyMessages extends Messages {
     @DefaultMessage("Füü {0} bar {1}")
     String yinyang(String yin, String yang);
     
-    @DefaultMessage("{0} wird hochgeladen ...") 
+    @DefaultMessage("Submit") 
+    String submitButtonDefault();
+
+    @DefaultMessage("Validating...") 
+    String submitButtonValidate();
+    
+    @DefaultMessage("File is too large (larger than {0} MB).") 
+    String errorTooLargeFile(String maxFileSize);
+
+    @DefaultMessage("Uploding {0} ...") 
     String uploadFile(String fileName);
+    
+    @DefaultMessage("Validation done") 
+    String validationDone();
 }

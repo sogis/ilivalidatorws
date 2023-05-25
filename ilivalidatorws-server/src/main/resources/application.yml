@@ -51,11 +51,9 @@ management:
 # APPLICATION
 # ========================   
   
-lucene:
-    queryDefaultRecords: ${LUCENE_QUERY_DEFAULT_RECORDS:10}
-    queryMaxRecords: ${LUCENE_QUERY_MAX_RECORDS:50}
-
 app:
     myVar: ${VAR:defaultValue}
+    connectTimeout: ${connectTimeout:5000}
+    readTimeout: ${readTimeout:5000}
     workDirectory: ${WORK_DIRECTORY:/tmp/}
     folderPrefix: ${FOLDER_PREFIX:ilivalidatorws_}

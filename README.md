@@ -24,5 +24,6 @@ curl -i -X GET http://localhost:8080/rest/jobs/4d4aa583-6575-4200-a39c-621a5190d
 
 - CSV-Checker implementieren
 - Falls multiple upload: Auch mit ili-File.
+- im result json auch link to zu toml etc.
 - API:
   * DELETE (https://cloud.ibm.com/docs/api-handbook?topic=api-handbook-long-running-operations&locale=de)
