@@ -179,7 +179,7 @@ public class App implements EntryPoint {
                 }
 
                 for (String fileName : fileNames) {
-                    logToClient(messages.uploadFile(fileName));                    
+                    logToProtocol(messages.uploadFile(fileName));                    
                 }
                 
                 RequestInit init = RequestInit.create();
@@ -267,7 +267,7 @@ public class App implements EntryPoint {
 
     }    
     
-    private void logToClient(String fileName) {
+    private void logToProtocol(String fileName) {
         console.log(fileName);
     }
     
