@@ -53,7 +53,7 @@ public class ApiController {
     
     @PostMapping(value="/api/jobs", consumes = {"multipart/form-data"})
     public ResponseEntity<?> uploadFiles(@RequestParam(name="files", required=true) @RequestBody MultipartFile[] files) {
-        log.debug("number of files: {}", files.length);
+        log.debug("number of uploaded files: {}", files.length);
         
         for (MultipartFile file : files) {
             log.debug(file.getOriginalFilename());

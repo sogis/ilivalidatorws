@@ -9,6 +9,11 @@ server:
     mime-types: text/html,text/xml,text/plain,text/css,text/javascript,application/javascript,application/json
     min-response-size: 1024
 
+# https://github.com/spring-projects/spring-boot/wiki/Spring-Boot-2.4-Release-Notes#default-servlet-registration
+# https://stackoverflow.com/questions/64822250/illegalstateexception-after-upgrading-web-app-to-spring-boot-2-4
+  servlet:
+    register-default-servlet: true
+
 # ========================
 # SPRING
 # ========================
@@ -51,9 +56,24 @@ management:
 # APPLICATION
 # ========================   
   
+org:
+  jobrunr:
+    background-job-server:
+      enabled: ${JOBRUNR_SERVER_ENABLED:true}
+      worker_count: 1 
+    dashboard:
+      enabled: ${JOBRUNR_DASHBOARD_ENABLED:true}
+      username: ${JOBRUNR_DASHBOARD_USER:admin}
+      password: ${JOBRUNR_DASHBOARD_PWD:admin}
+  
 app:
-    myVar: ${VAR:defaultValue}
-    connectTimeout: ${connectTimeout:5000}
-    readTimeout: ${readTimeout:5000}
-    workDirectory: ${WORK_DIRECTORY:/tmp/}
-    folderPrefix: ${FOLDER_PREFIX:ilivalidatorws_}
+  myVar: ${VAR:defaultValue}
+  connectTimeout: ${CONNECT_TIMEOUT:5000}
+  readTimeout: ${READ_TIMEOUT:5000}    
+  docBase: ${DOC_BASE:/tmp/}
+  configDirectoryName: ${CONFIG_DIRECTORY_NAME:config}
+  unpackConfigFiles: ${UNPACK_CONFIG_FILES:true}
+  workDirectory: ${WORK_DIRECTORY:/tmp/}
+  folderPrefix: ${FOLDER_PREFIX:ilivalidatorws_}
+  restApiEnabled: ${REST_API_ENABLED:true}
+  cleanerEnabled: ${CLEANER_ENABLED:true}

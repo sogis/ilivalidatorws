@@ -236,7 +236,7 @@ public class App implements EntryPoint {
                                                 + "</svg>\n"
                                                 + "</a>";
 
-                                        logToProtocol(": " + txtLogIconLink + "&nbsp;" + xtfLogIconLink);
+                                        logToProtocol(messages.validationDone() + ": " + txtLogIconLink + "&nbsp;" + xtfLogIconLink);
                                     }
                                 } else {
                                     console.log("status code: " + httpRequest.status);

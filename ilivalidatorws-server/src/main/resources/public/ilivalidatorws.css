@@ -133,7 +133,7 @@ button[disabled].submit-button {
     cursor: wait;
 } 
 
-#protocol-container {    
+#protocol-container { 
 	font-size: 16px;
 	margin-top: 30px;
 	padding-top: 10px;
