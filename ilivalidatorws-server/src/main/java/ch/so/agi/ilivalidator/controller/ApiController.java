@@ -113,7 +113,7 @@ public class ApiController {
             }
             
             jobScheduler.enqueue(jobIdUuid, () -> ilivalidatorService.validate(transferFileNames.toArray(new String[0]), logFileName, iliFileNames.toArray(new String[0]), configFileNames.toArray(new String[0])));
-            log.debug("<{}> Queuing job.", jobId);
+            log.debug("<{}> Queuing job", jobId);
         }
 
         return ResponseEntity
@@ -125,8 +125,6 @@ public class ApiController {
     
     @GetMapping("/api/jobs/{jobId}")
     public ResponseEntity<?> getJobById(@PathVariable String jobId) {
-        log.debug("Status jobId: {}", jobId);
-
         Job job = storageProvider.getJobById(UUID.fromString(jobId));        
         String logFileName = job.getJobDetails().getJobParameters().get(1).getObject().toString();  
 
@@ -152,7 +150,7 @@ public class ApiController {
                 e.printStackTrace();
             }
         } else {
-            log.debug("<{}> Status: {}", jobId, job.getJobState().getName());
+            log.debug("<{}> {}", jobId, job.getJobState().getName());
         }
         
       JobResponse jobResponse = new JobResponse(
