@@ -57,10 +57,10 @@ public class IlivalidatorService {
         settings.setValue(Validator.SETTING_LOGFILE, logFileName);
         settings.setValue(Validator.SETTING_XTFLOG, logFileName + ".xtf");
 
-        log.info("1 {}", transferFileNames);
-        log.info("2 {}", logFileName);
-        log.info("3 {}", modelFileNames);
-        log.info("4 {}", configFileNames);
+//        log.info("1 {}", transferFileNames);
+//        log.info("2 {}", logFileName);
+//        log.info("3 {}", modelFileNames);
+//        log.info("4 {}", configFileNames);
 
         String settingIlidirs = Validator.SETTING_DEFAULT_ILIDIRS;
 
@@ -76,7 +76,7 @@ public class IlivalidatorService {
         settingIlidirs = builtinIliFiles.getAbsolutePath() + ";" + settingIlidirs;
         settings.setValue(Validator.SETTING_ILIDIRS, Validator.SETTING_DEFAULT_ILIDIRS);
 
-        log.debug("setting ilidirs: {}", settingIlidirs);
+        log.debug("Setting ilidirs: {}", settingIlidirs);
 
         // Falls eine ini-Datei mitgeliefert wird, wird diese verwendet. Sonst wird im
         // config/ini-Ordner (bei den mit der
@@ -106,9 +106,9 @@ public class IlivalidatorService {
         // TODO Prüfen, ob das jetzt geht.
         settings.setValue(Validator.SETTING_ALL_OBJECTS_ACCESSIBLE, Validator.TRUE);
 
-        log.info("Validation start.");
+        log.info("Validation start");
         boolean valid = Validator.runValidation(transferFileNames, settings);
-        log.info("Validation end.");
+        log.info("Validation end");
 
         return valid;
 
@@ -119,7 +119,7 @@ public class IlivalidatorService {
 //        // https://github.com/claeis/ilivalidator/issues/83
     }
 
-    /**
+    /*
      * Figure out INTERLIS model name from INTERLIS transfer file. Works with ili1
      * and ili2.
      */
