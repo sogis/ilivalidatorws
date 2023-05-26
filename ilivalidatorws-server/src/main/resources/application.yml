@@ -36,6 +36,16 @@ spring:
       max-file-size: ${MAX_FILE_SIZE:300}MB
       max-request-size: ${MAX_FILE_SIZE:300}MB
 
+  datasource:
+    url: ${JDBC_URL:jdbc:sqlite:/Users/stefan/tmp/jobrunr_db.sqlite}
+    #url: ${JDBC_URL:jdbc:sqlite:/tmp/jobrunr_db.sqlite}
+    #url: ${JDBC_URL:jdbc:h2:/Users/stefan/tmp/jobrunr_db}
+    #username: ${JDBC_USER:admin}
+    #password=${JDBC_PWD:admin}
+#    h2:
+#      console:
+#        enabled: false
+
 management:
   health:
     probes:

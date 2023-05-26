@@ -19,6 +19,7 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.core.io.support.ResourcePatternResolver;
+import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.web.filter.ForwardedHeaderFilter;
 
 import org.apache.commons.io.IOUtils;
@@ -28,6 +29,7 @@ import org.slf4j.LoggerFactory;
 @SpringBootApplication
 @ServletComponentScan
 @Configuration
+@EnableScheduling
 public class Application extends SpringBootServletInitializer {
     private final Logger log = LoggerFactory.getLogger(this.getClass());
 
@@ -60,6 +62,7 @@ public class Application extends SpringBootServletInitializer {
         return new ForwardedHeaderFilter();
     }  
   
+    // TODO: Konfigurierbar?
     @Bean
     void setPluginClasses() {
         System.setProperty("ch.ehi.iox-ili.pluginClasses",
@@ -102,15 +105,15 @@ public class Application extends SpringBootServletInitializer {
                 for (Resource resource : resources) {
                     InputStream is = resource.getInputStream();
                     File tomlFile = Paths.get(iliDirectory.getAbsolutePath(), resource.getFilename()).toFile();
-                    log.info("copying " + resource.getFilename() + " to " + iliDirectory.getAbsolutePath());
+                    log.info("Copying {} to {}", resource.getFilename(), iliDirectory.getAbsolutePath());
                     Files.copy(is, tomlFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
                     IOUtils.closeQuietly(is);
                 }
             }
 
-            File tomlDirectory = Paths.get(docBase, configDirectoryName, "ini").toFile();
-            if (!tomlDirectory.exists()) {
-                tomlDirectory.mkdir();
+            File iniDirectory = Paths.get(docBase, configDirectoryName, "ini").toFile();
+            if (!iniDirectory.exists()) {
+                iniDirectory.mkdir();
             }
             
             if (unpackConfigFiles) {
@@ -118,8 +121,8 @@ public class Application extends SpringBootServletInitializer {
                 Resource[] resources = resolver.getResources("classpath:ini/*.ini");
                 for (Resource resource : resources) {
                     InputStream is = resource.getInputStream();
-                    File tomlFile = Paths.get(tomlDirectory.getAbsolutePath(), resource.getFilename()).toFile();
-                    log.info("copying " + resource.getFilename() + " to " + tomlDirectory.getAbsolutePath());
+                    File tomlFile = Paths.get(iniDirectory.getAbsolutePath(), resource.getFilename()).toFile();
+                    log.info("Copying {} to {}", resource.getFilename(), iniDirectory.getAbsolutePath());
                     Files.copy(is, tomlFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
                     IOUtils.closeQuietly(is);
                 }

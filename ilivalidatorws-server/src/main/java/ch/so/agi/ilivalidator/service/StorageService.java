@@ -8,6 +8,8 @@ import org.springframework.web.multipart.MultipartFile;
 public interface StorageService {
     void init();
 
+    Path[] store(MultipartFile[] files);
+    
     Path store(MultipartFile file);
     
     Path load(String filename);
