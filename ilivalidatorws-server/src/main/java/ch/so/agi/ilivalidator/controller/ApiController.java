@@ -74,12 +74,12 @@ public class ApiController {
         
         Path[] uploadedFiles = fileStorageService.store(files);
 
-        // Mit einem einfachen Ansatz wird versucht herauszufinden, welcher Validierungstyp vorliegt.
+        // Mit einem einfachen Ansatz wird versucht herauszufinden, welcher Validierungstyp verwendet werden muss.
+        // D.h. welches Format vorliegt und geprüft werden soll.
         // Nach einem ersten Auffinden eines bekannten Filetypes wird aufgehört.
         // Momentan gibt es nur INTERLIS. Denkbar z.B. CSV, Shapefile (iox-wkf halt).
         ValidationType validationType = null;
         for (Path path : uploadedFiles) {
-            //log.debug("<{}> {}", jobId, path.toAbsolutePath().toString());
             if (path.toFile().toString().toLowerCase().endsWith("xtf") || path.toFile().toString().toLowerCase().endsWith("xml") || path.toFile().toString().toLowerCase().endsWith("itf")) {
                 validationType = ValidationType.INTERLIS;
                 break;
@@ -87,6 +87,8 @@ public class ApiController {
                 validationType = ValidationType.UNDEFINED;
             }
         }
+        
+        log.debug("<{}> Validation type: {}", jobId, validationType);
         
         if (validationType == ValidationType.UNDEFINED || validationType ==  null) {
                 throw new IllegalArgumentException("<"+jobId+"> Not supported data format.");
@@ -112,7 +114,7 @@ public class ApiController {
             }
             
             jobScheduler.enqueue(jobIdUuid, () -> ilivalidatorService.validate(transferFileNames.toArray(new String[0]), logFileName, iliFileNames.toArray(new String[0]), configFileNames.toArray(new String[0])));
-            log.debug("<{}> Queuing job", jobId);
+            log.debug("<{}> Job is being queued", jobId);
         }
 
         return ResponseEntity
@@ -149,7 +151,7 @@ public class ApiController {
                 e.printStackTrace();
             }
         } else {
-            log.debug("<{}> {}", jobId, job.getJobState().getName());
+            log.debug("<{}> Status request from client: {}", jobId, job.getJobState().getName());
         }
         
       JobResponse jobResponse = new JobResponse(

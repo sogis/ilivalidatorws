@@ -9,4 +9,6 @@ class ApplicationTests {
     @Test
     void contextLoads() {
     }
+    
+    // Test mit ini off=allObjectsAccessible und dann log parsen, ob so ist.
 }
