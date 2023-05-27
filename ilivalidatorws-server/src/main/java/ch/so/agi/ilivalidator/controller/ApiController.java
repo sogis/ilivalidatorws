@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
@@ -62,7 +63,9 @@ public class ApiController {
     private int counter=0;
     
     @PostMapping(value="/api/jobs", consumes = {"multipart/form-data"})
-    public ResponseEntity<?> uploadFiles(@RequestParam(name="files", required=true) @RequestBody MultipartFile[] files) {
+    // @RequestPart anstelle von @RequestParam und @RequestBody damit swagger korrekt funktioniert.
+    // Sonst kann man zwar Dateien auswählen aber Swagger reklamiert im Browser, dass es Strings sein müssen.
+    public ResponseEntity<?> uploadFiles(@RequestPart(name="files", required=true) MultipartFile[] files) {
         // Wir erstellen vorab eine JobId, damit man Logeinträge dieser JobId zuordnen kann.
         UUID jobIdUuid = UUID.randomUUID();
         String jobId = jobIdUuid.toString();
@@ -76,7 +79,7 @@ public class ApiController {
         // Momentan gibt es nur INTERLIS. Denkbar z.B. CSV, Shapefile (iox-wkf halt).
         ValidationType validationType = null;
         for (Path path : uploadedFiles) {
-            log.debug("<{}> {}", jobId, path.toAbsolutePath().toString());
+            //log.debug("<{}> {}", jobId, path.toAbsolutePath().toString());
             if (path.toFile().toString().toLowerCase().endsWith("xtf") || path.toFile().toString().toLowerCase().endsWith("xml") || path.toFile().toString().toLowerCase().endsWith("itf")) {
                 validationType = ValidationType.INTERLIS;
                 break;
