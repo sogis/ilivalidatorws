@@ -12,7 +12,6 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
-import ch.interlis.iox.IoxException;
 import ch.so.agi.ilivalidator.Utils;
 import ch.so.agi.ilivalidator.model.JobResponse;
 import ch.so.agi.ilivalidator.model.ValidationResult;
@@ -27,14 +26,11 @@ import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 import org.apache.commons.io.FilenameUtils;
 import org.jobrunr.jobs.Job;
-import org.jobrunr.jobs.JobId;
 import org.jobrunr.jobs.states.StateName;
 import org.jobrunr.scheduling.JobScheduler;
 import org.jobrunr.storage.StorageProvider;
