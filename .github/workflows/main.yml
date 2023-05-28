@@ -10,8 +10,8 @@ jobs:
     env:
       DOCKER_ACCOUNT: sogis
       DOCKER_REPO: ilivalidator-web-service
-      DOCKER_PASSWORD: ${{secrets.DOCKER_PASSWORD}}
-      DOCKER_USERNAME: ${{secrets.DOCKER_USERNAME}} 
+      DOCKER_PASSWORD: ${{secrets.DOCKER_HUB_ACCESS_TOKEN}}
+      DOCKER_USERNAME: ${{secrets.DOCKER_HUB_USERNAME}} 
       BUILD_NUMBER: ${{ github.run_number }}
       VERSION: 2.0.${{ github.run_number }}
 
@@ -49,8 +49,6 @@ jobs:
           context: ilivalidatorws-server
           file: ilivalidatorws-server/Dockerfile.jvm
           tags: ${{ env.DOCKER_ACCOUNT }}/${{ env.DOCKER_REPO }}
-          # tags: ${{ steps.meta.outputs.tags }}
-          # labels: ${{ steps.meta.outputs.labels }}
           load: true
           pull: true 
 
@@ -58,58 +56,39 @@ jobs:
         run: |
           docker images
 
-      - name: Test Docker images
+      - name: Test Docker image
         run: ./mvnw test -Dgroups="docker"
 
+      - name: Login to Docker Container Registry
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+        if: ${{ (github.ref == 'refs/heads/main') && (github.event_name != 'pull_request') && !env.ACT }}
 
-      # - name: Docker meta
-      #   id: meta
-      #   uses: docker/metadata-action@v4
-      #   with:
-      #     images: ${{ env.DOCKER_ACCOUNT }}/${{ env.DOCKER_REPO }}
-      #     labels: |
-      #       org.opencontainers.image.title=${{ env.DOCKER_REPO }}
-      #       org.opencontainers.image.version=${{ env.VERSION }}
-      #       org.opencontainers.image.base.name=docker.io/bellsoft/liberica-openjdk-centos:17.0.7
-      #     tags: |
-      #       type=raw,value=${{ env.VERSION }},enable=true,priority=200
-      #       type=raw,value=2.0,enable=true,priority=200
-      #       type=raw,value=0,enable=true,priority=200
-      #       type=raw,value=latest,enable=true,priority=200
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+        if: ${{ (github.ref == 'refs/heads/main') && (github.event_name != 'pull_request') && !env.ACT }}
 
-      # - name: Login to Docker Container Registry
-      #   uses: docker/login-action@v2
-      #   with:
-      #     username: ${{ secrets.DOCKER_USERNAME }}
-      #     password: ${{ secrets.DOCKER_PASSWORD }}
-      #   if: ${{ (github.ref == 'refs/heads/main') && (github.event_name != 'pull_request') && !env.ACT }}
-
-      # - name: Login to GitHub Container Registry
-      #   uses: docker/login-action@v2
-      #   with:
-      #     registry: ghcr.io
-      #     username: ${{ github.actor }}
-      #     password: ${{ secrets.GITHUB_TOKEN }}
-      #   if: ${{ (github.ref == 'refs/heads/main') && (github.event_name != 'pull_request') && !env.ACT }}
-
-
-
-
-      # - name: Multi-platform build and push to Docker Container Registry
-      #   uses: docker/build-push-action@v2
-      #   with:
-      #     platforms: linux/amd64,linux/arm64
-      #     context: ilivalidatorws-server
-      #     file: ilivalidatorws-server/Dockerfile.jvm
-      #     labels: ${{ steps.meta.outputs.labels }}
-      #     pull: true
-      #     push: ${{ (github.ref == 'refs/heads/main') && (github.event_name != 'pull_request') && !env.ACT }}
-      #     tags: |
-      #       ${{ env.DOCKER_ACCOUNT }}/${{ env.DOCKER_REPO }}:latest
-      #       ${{ env.DOCKER_ACCOUNT }}/${{ env.DOCKER_REPO }}:${{ env.VERSION }}
-      #       ${{ env.DOCKER_ACCOUNT }}/${{ env.DOCKER_REPO }}:2.0
-      #       ${{ env.DOCKER_ACCOUNT }}/${{ env.DOCKER_REPO }}:2
-      #       ghcr.io/${{ env.DOCKER_ACCOUNT }}/${{ env.DOCKER_REPO }}:latest
-      #       ghcr.io/${{ env.DOCKER_ACCOUNT }}/${{ env.DOCKER_REPO }}:${{ env.VERSION }}
-      #       ghcr.io/${{ env.DOCKER_ACCOUNT }}/${{ env.DOCKER_REPO }}:2.0
-      #       ghcr.io/${{ env.DOCKER_ACCOUNT }}/${{ env.DOCKER_REPO }}:2
+      - name: Multi-platform build and push to Docker Container Registry
+        uses: docker/build-push-action@v2
+        with:
+          platforms: linux/amd64,linux/arm64
+          context: ilivalidatorws-server
+          file: ilivalidatorws-server/Dockerfile.jvm
+          labels: ${{ steps.meta.outputs.labels }}
+          pull: true
+          push: ${{ (github.ref == 'refs/heads/main') && (github.event_name != 'pull_request') && !env.ACT }}
+          tags: |
+            ${{ env.DOCKER_ACCOUNT }}/${{ env.DOCKER_REPO }}:latest
+            ${{ env.DOCKER_ACCOUNT }}/${{ env.DOCKER_REPO }}:${{ env.VERSION }}
+            ${{ env.DOCKER_ACCOUNT }}/${{ env.DOCKER_REPO }}:2.0
+            ${{ env.DOCKER_ACCOUNT }}/${{ env.DOCKER_REPO }}:2
+            ghcr.io/${{ env.DOCKER_ACCOUNT }}/${{ env.DOCKER_REPO }}:latest
+            ghcr.io/${{ env.DOCKER_ACCOUNT }}/${{ env.DOCKER_REPO }}:${{ env.VERSION }}
+            ghcr.io/${{ env.DOCKER_ACCOUNT }}/${{ env.DOCKER_REPO }}:2.0
+            ghcr.io/${{ env.DOCKER_ACCOUNT }}/${{ env.DOCKER_REPO }}:2
