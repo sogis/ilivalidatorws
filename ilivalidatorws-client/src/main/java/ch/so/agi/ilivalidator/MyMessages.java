@@ -12,7 +12,7 @@ public interface MyMessages extends Messages {
     @DefaultMessage("Submit") 
     String submitButtonDefault();
 
-    @DefaultMessage("Validating...") 
+    @DefaultMessage("Validating ...") 
     String submitButtonValidate();
     
     @DefaultMessage("File is too large (larger than {0} MB).") 
@@ -23,4 +23,10 @@ public interface MyMessages extends Messages {
     
     @DefaultMessage("Validation done") 
     String validationDone();
+    
+    @DefaultMessage("No errors found") 
+    String validationStatusTxtSuccess();
+
+    @DefaultMessage("Errors found") 
+    String validationStatusTxtFail();
 }

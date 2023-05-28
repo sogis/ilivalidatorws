@@ -118,7 +118,7 @@ public class App implements EntryPoint {
         container.appendChild(div().css("ilivalidatorws-title").textContent("ilivalidator web service").element());
 
         // Info
-        String infoString = "Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr.";
+        String infoString = "Der <i>ilivalidator web service</i> stellt eine einfache Art dar INTERLIS-Daten gegenüber einem INTERLIS-Modell zu prüfen. Sie können eine oder mehrere INTERLIS-Transferdaten (.xtf, .xml, .itf) hochladen und prüfen. Er erlaubt es auch eigene Datenmodelle und Konfigurationsdateien mitzuschicken. Weitere Informationen finden sich <a class='default-link' href='https://github.com/sogis/ilivalidatorws/blob/master/docs/user-manual-de.md' target='_blank'>hier</a>.";
         container.appendChild(div().css("info").innerHtml(SafeHtmlUtils.fromTrustedString(infoString)).element());
         
         // Protocol
@@ -200,7 +200,6 @@ public class App implements EntryPoint {
                         return null;
                     }
                     String jobUrl = response.headers.get(HEADER_OPERATION_LOCATION);
-                    console.log(jobUrl);
                     
                     if (apiTimer != null) {
                         apiTimer.cancel();
@@ -221,10 +220,15 @@ public class App implements EntryPoint {
                                     String jobStatus = ((JsString) resultJsonObj.get("status")).normalize();
                                     
                                     if (jobStatus.equalsIgnoreCase("SUCCEEDED")) {
-                                        console.log("cancel timer");
                                         apiTimer.cancel();
                                         resetInputElements();
 
+                                        String validationStatus = ((JsString) resultJsonObj.get("validationStatus")).normalize();
+                                        String validationStatusTxt = messages.validationStatusTxtSuccess();
+                                        if (validationStatus.equalsIgnoreCase("FAILED")) {
+                                            validationStatusTxt = messages.validationStatusTxtFail();
+                                        } 
+                                        
                                         String logFileHref = ((JsString) resultJsonObj.get("logFileLocation")).normalize();
                                         String xtfLogFileHref = ((JsString) resultJsonObj.get("xtfLogFileLocation")).normalize();
 
@@ -242,7 +246,7 @@ public class App implements EntryPoint {
                                                 + "</svg>\n"
                                                 + "</a>";
 
-                                        logToProtocol(messages.validationDone() + ": " + txtLogIconLink + "&nbsp;" + xtfLogIconLink);
+                                        logToProtocol(messages.validationDone() + ". " + validationStatusTxt +  ": " + txtLogIconLink + "&nbsp;" + xtfLogIconLink);
                                     }
                                 } else {
                                     console.log("status code: " + httpRequest.status);
