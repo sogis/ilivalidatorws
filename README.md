@@ -38,7 +38,7 @@ Die Anwendung besteht aus einer Komponente. Wird ein Datenbankserver für das Sp
 Die Anwendung kann als gewöhnliche Spring Boot Anwendung gestartet werden:
 
 ```
-java -jar build/libs/ilivalidatorws-<VERSION>-exec.jar
+java -jar ilivalidatorws-server/target/ilivalidatorws-exec.jar
 ```
 
 Konfiguration via _application.yml_ im Verzeichnis in dem der Service gestartet wird. Oder entsprechende alternative Konfigurationsmöglichkeiten von [Spring Boot](https://docs.spring.io/spring-boot/docs/2.7.12/reference/htmlsingle/#features.external-config).
