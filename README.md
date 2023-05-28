@@ -51,7 +51,11 @@ Das Dockerimage wird wie folgt gestartet:
 docker run -p8080:8080 sogis/ilivalidator-web-service:<VERSION>
 ```
 
-Der Dockercontainer verwendet eine leicht angepasste Konfiguration ([application-docker.yml](src/main/resources/application-docker.yml)), damit das Mounten von Verzeichnissen hoffentlich einfacher fällt und weniger Fehler passieren.
+Der Dockercontainer verwendet eine leicht angepasste Konfiguration ([application-docker.yml](src/main/resources/application-docker.yml)), damit das Mounten von Verzeichnissen hoffentlich einfacher fällt und weniger Fehler passieren:
+
+- Die SQLite-Datenbank wird im _/work_-Verzeichnis angelegt, das im Dockerimage angelegt wird.
+- Für `DOC_BASE` wird das _/docbase_-Verzeichnis verwendet, das im Dockerimage angelegt wird.
+- Für `WORK_DIRECTORY` wird das _/work_-Verzeichnis verwendet, das im Dockerimage angelegt wird. 
 
 Die allermeisten Optionen sind via Umgebungsvariablen exponiert und somit veränderbar. Im Extremfall kann immer noch ein neues Dockerimage erstellt werden mit einer ganz eigenen Konfiguration.
 
@@ -65,18 +69,24 @@ Die allermeisten Optionen sind via Umgebungsvariablen exponiert und somit verän
 | `LOG_LEVEL_APPLICATION` | Das Logging-Level der Anwendung (= selber geschriebener Code). | `DEBUG` |
 | `CONNECT_TIMEOUT` | Die Zeit in Millisekunden, die bis zu einem erfolgreichem Connect gewartet wird. Betrifft sämtliche Methoden, welche `sun.net.client.defaultConnectTimeout` berücksichtigen. Die Option dient dazu damit langsame INTERLIS-Modellablage schneller zu einem Timeout führen. | `5000` |
 | `READ_TIMEOUT` | Die Zeit in Millisekunden, die bis zu einem erfolgreichem Lesen gewartet wird. Betrifft sämtliche Methoden, welche `sun.net.client.defaultConnectTimeout` berücksichtigen. Die Option dient dazu damit langsame INTERLIS-Modellablage schneller zu einem Timeout führen. | `5000` |
-| `DOC_BASE` | Verzeichnis auf dem Filesystem, das als Root-Verzeichnis für das Directory-Listing des Webservers dient. Das Root-Verzeichnis selber ist nicht sichtbar. | `/docbase/` |
+| `DOC_BASE` | Verzeichnis auf dem Filesystem, das als Root-Verzeichnis für das Directory-Listing des Webservers dient. Das Root-Verzeichnis selber ist nicht sichtbar. | `/tmp/` |
 | `CONFIG_DIRECTORY_NAME` | Unterverzeichnis im `DOC_BASE`-Verzeichnis, welches die _ini_- und _ili_-Verzeichnisse enthält. Dieses Verzeichnis ist unter http://localhost:8080/config erreichbar. Es muss nicht manuell erstellt werden. Es wird beim Starten der Anwendung erstellt. Das Verzeichnis muss bei einem Betrieb mit mehreren Containern geteilt werden, falls zusätzliche _ini_- und _ili_-Dateien in die entsprechenden Verzeichnisse kopiert werden. | `config` |
 | `UNPACK_CONFIG_FILES` | In der Anwendung enthaltene _ini_- und _ili_-Dateien werden bei jedem Start der Anwendung in die entsprechenden Verzeichnisse kopiert. | `true` |
-| `WORK_DIRECTORY` | Verzeichnis, in das die zu prüfenden INTERLIS-Transferdatei und die Logdateien kopiert werden (in ein temporäres Unterverzeichnis). Es ist das einzige Verzeichnis, welches bei einem Betrieb mit mehreren Containern zwingend geteilt werden muss. Sonst ist nicht sichergestellt, dass man die Logdatei(en) herunterladen kann. | `/work/` |
+| `WORK_DIRECTORY` | Verzeichnis, in das die zu prüfenden INTERLIS-Transferdatei und die Logdateien kopiert werden (in ein temporäres Unterverzeichnis). Es ist das einzige Verzeichnis, welches bei einem Betrieb mit mehreren Containern zwingend geteilt werden muss. Sonst ist nicht sichergestellt, dass man die Logdatei(en) herunterladen kann. | `/tmp/` |
 | `FOLDER_PREFIX` | Für jede zu prüfende Datei wird im `WORK`-Verzeichnis ein temporäres Verzeichnis erstellt. Der Prefix wird dem Namen des temporären Verzeichnisses vorangestellt. | `ilivalidator_` |
 | `CLEANER_ENABLED` | Dient zum Ein- und Ausschalten des Aufräumprozesses, der alte, geprüfte Dateien (INTERLIS-Transferdateien, Logfiles) löscht. | `true` |
 | `REST_API_ENABLED` | Dient zum Ein- und Ausschalten des REST-API-Controllers und damit der eigentlichen Funktionalität (auch wenn Jobrunr trotzdem initialisiert wird). | `true` |
-| `JDBC_URL` | Die JDBC-Url der Sqlite-Datei, die dem Speichern der Jobs dient, welche mittels REST-API getriggert wurden. Die Datei wird im Standard-`WORK`-Verzeichnis gespeichert, da dieses beim Multi-Container-Betrieb geteilt werden muss. Andere JDBC-fähige Datenbanken sind ebenfalls möglich. Dann müssten noch mindestens Login und Password exponiert werden. Und die Anwendung müsste neu mit dem dazugehörigen JDBC-Treiber gebuildet werden. | `jdbc:sqlite:/work/jobrunr_db.sqlite` |
+| `JDBC_URL` | Die JDBC-Url der Sqlite-Datei, die dem Speichern der Jobs dient, welche mittels REST-API getriggert wurden. Die Datei wird im Standard-`WORK`-Verzeichnis gespeichert, da dieses beim Multi-Container-Betrieb geteilt werden muss. Andere JDBC-fähige Datenbanken sind ebenfalls möglich. Dann müssten noch mindestens Login und Password exponiert werden. Und die Anwendung müsste neu mit dem dazugehörigen JDBC-Treiber gebuildet werden. | `jdbc:sqlite:/tmp/jobrunr_db.sqlite` |
 | `JOBRUNR_SERVER_ENABLED` | Dient die Instanz als sogenannter Background-Jobserver, d.h. werden mittels REST-API hochgeladene INTERLIS-Transferdateien validiert. Wird nur eine Instanz betrieben, muss die Option zwingen `true` sein, da sonst der Job nicht ausgeführt wird. | `true` |
+| `JOBRUNR_POLL_INTERVAL` | Es wird im Intervall (in Sekunden) nach neuen Validierungsjobs geprüft. | `10` |
+| `JOBRUNR_WORKER_COUNT` | Anzahl Jobs, die in einem "Worker" gleichzeitig durchgeführt werden können. Im Prinzip nicht sehr relevant, da der Validierungsjob synchronisiert ist (nicht thread safe). | `1` |
 | `JOBRUNR_DASHBOARD_ENABLED` | Das Jobrunr-Dashboard wird auf dem Port 8000 gestartet. | `true` |
 | `JOBRUNR_DASHBOARD_USER` | Username für Jobrunr-Dasboard. Achtung: Basic Authentication. | `admin` |
 | `JOBRUNR_DASHBOARD_PWD` | Passwort für Jobrunr-Dasboard. Achtung: Basic Authentication. | `admin` |
+| `TOMCAT_THREADS_MAX` | Maximale Anzahl Threads, welche die Anwendung gleichzeitig bearbeitet. | `20` |
+| `TOMCAT_ACCEPT_COUNT` | Maximale Grösser der Queue, falls keine Threads mehr verfügbar. | `100` |
+| `TOMCAT_MAX_CONNECTIONS` | Maximale Threads des Servers. | `500` |
+| `HIKARI_MAX_POOL_SIZE` | Grösse des DB-Connections-Pools | `10` |
 
 Ein `docker-run`-Befehl könnte circa so aussehen:
 
@@ -187,12 +197,31 @@ Or without downloading all the snapshots again:
 ### Build
 
 ```
-./mvnw -Penv-prod clean package
+./mvnw -Penv-prod clean package -DexcludedGroups="docker"
 ```
 
 ```
 docker build -t sogis/ilivalidator-web-service:latest -f ilivalidatorws-server/Dockerfile.jvm .
 ```
+
+```
+./mvnw test -Dgroups="docker"
+```
+
+### Tests
+
+```
+./mvnw test -DexcludedGroups="docker"
+```
+
+```
+./mvnw test -Dtest=SpringApiTests -DfailIfNoTests=false
+```
+
+```
+./mvnw test -Dtest=SpringApiTests#validation_Ok_Interlis2Files -DfailIfNoTests=false
+```
+
 
 ## Ideen
 

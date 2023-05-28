@@ -113,6 +113,10 @@ public class ApiController {
                 }
             }
             
+            log.debug("<{}> Number of uploaded transfer files files: {}", jobId, transferFileNames.size());
+            log.debug("<{}> Number of uploaded ili files files: {}", jobId, iliFileNames.size());
+            log.debug("<{}> Number of uploaded config files files: {}", jobId, configFileNames.size());
+            
             jobScheduler.enqueue(jobIdUuid, () -> ilivalidatorService.validate(transferFileNames.toArray(new String[0]), logFileName, iliFileNames.toArray(new String[0]), configFileNames.toArray(new String[0])));
             log.debug("<{}> Job is being queued", jobId);
         }

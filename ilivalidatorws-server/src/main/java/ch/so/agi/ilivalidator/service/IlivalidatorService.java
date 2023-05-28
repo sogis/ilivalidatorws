@@ -77,6 +77,11 @@ public class IlivalidatorService {
         settings.setValue(Validator.SETTING_ILIDIRS, Validator.SETTING_DEFAULT_ILIDIRS);
 
         log.debug("Setting ilidirs: {}", settingIlidirs);
+        
+        // Falls man SETTING_ALL_OBJECTS_ACCESSIBLE ausschalten will, muss dies mit einem Config-File
+        // gemacht werden. 
+        // TODO Prüfen, ob das jetzt geht.
+        settings.setValue(Validator.SETTING_ALL_OBJECTS_ACCESSIBLE, Validator.TRUE);
 
         // Falls eine ini-Datei mitgeliefert wird, wird diese verwendet. Sonst wird im
         // config/ini-Ordner (bei den mit der
@@ -88,6 +93,13 @@ public class IlivalidatorService {
         // erste Config-Datei-Match verwendet.
         if (configFileNames.length > 0) {
             settings.setValue(Validator.SETTING_CONFIGFILE, configFileNames[0]);
+            // Option muss explizit auf NULL gesetzt werden, dann macht ilivalidator nichts
+            // resp. es wird der Wert aus der ini-Datei verwendet.
+            // Siehe Quellcode ilivalidator.
+            // Ggf. noch heikel, da m.E. das auf der Konsole nicht funktionert. Man
+            // kann nicht --allObjectsAccessible verwenden und mit einem config-File
+            // überschreiben.
+            settings.setValue(Validator.SETTING_ALL_OBJECTS_ACCESSIBLE, null);
             log.debug("Uploaded config file used: {}", configFileNames[0]);
         } else {
             for (String transferFileName : transferFileNames) {
@@ -101,11 +113,6 @@ public class IlivalidatorService {
             }
         }
         
-        // Falls man SETTING_ALL_OBJECTS_ACCESSIBLE ausschalten will, muss dies mit einem Config-File
-        // gemacht werden. 
-        // TODO Prüfen, ob das jetzt geht.
-        settings.setValue(Validator.SETTING_ALL_OBJECTS_ACCESSIBLE, Validator.TRUE);
-
         log.info("Validation start");
         boolean valid = Validator.runValidation(transferFileNames, settings);
         log.info("Validation end");

@@ -91,6 +91,26 @@
       <artifactId>spring-boot-starter-test</artifactId>
       <scope>test</scope>
     </dependency>
+
+<dependency>
+    <groupId>org.testcontainers</groupId>
+    <artifactId>testcontainers</artifactId>
+    <version>1.18.1</version>
+    <scope>test</scope>
+</dependency>
+<dependency>
+    <groupId>org.testcontainers</groupId>
+    <artifactId>junit-jupiter</artifactId>
+    <version>1.18.1</version>
+    <scope>test</scope>
+</dependency>
+<dependency>
+    <groupId>org.awaitility</groupId>
+    <artifactId>awaitility</artifactId>
+    <version>4.2.0</version>
+    <scope>test</scope>
+</dependency> 
+    
   </dependencies>
   <repositories>
     <repository>
@@ -163,6 +183,15 @@
       <activation></activation>
       <build>
         <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-surefire-plugin</artifactId>
+            <configuration>
+                <groups>docker</groups>
+                <excludedGroups>docker</excludedGroups>
+            </configuration>
+          </plugin>
+      
           <!-- Das ist "build smell", weil das Entpacken vor dem Packen kommt. Eclipse und Maven reklamiert auch. Siehe README.md -->
           <!-- Der Original-Archtype verwendet war-Packaging. Darum geht es in diesem Fall, wenn man bloss das war-File reinkopiert.
                Wenn wir wie hier jar-Packaging verwenden, muss das war-File entpackt werden und die Inhalte reinkopiert werden. -->
