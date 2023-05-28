@@ -18,7 +18,7 @@ RUN chown $UID:0 . && \
 ENV HOME=/ilivalidator
 WORKDIR $HOME
 
-COPY ./ilivalidatorws-server/target/ilivalidatorws-exec.jar ./application.jar
+COPY target/ilivalidatorws-exec.jar ./application.jar
 RUN chown $UID:0 . && \
     chmod 0775 . && \
     ls -la
