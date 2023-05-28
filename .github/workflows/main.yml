@@ -5,13 +5,13 @@ on:
   push:
     paths-ignore:
       - '**.md'
-      
+
 jobs:
 
   build-jvm:
     env:
       DOCKER_ACCOUNT: sogis
-      DOCKER_REPO: ilivalidator-web-service
+      DOCKER_REPO: ilivalidatorws
       DOCKER_PASSWORD: ${{secrets.DOCKER_PASSWORD}}
       DOCKER_USERNAME: ${{secrets.DOCKER_USERNAME}} 
       BUILD_NUMBER: ${{ github.run_number }}
