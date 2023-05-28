@@ -1,4 +1,4 @@
-[![CI/CD](https://github.com/edigonzales/ilivalidatorws/actions/workflows/main.yml/badge.svg)](https://github.com/edigonzales/ilivalidatorws/actions/workflows/main.yml)
+[![CI/CD](https://github.com/sogis/ilivalidatorws/actions/workflows/main.yml/badge.svg)](https://github.com/sogis/ilivalidatorws/actions/workflows/main.yml)
 
 # ilivalidatorws
 
@@ -17,7 +17,7 @@ The ilivalidator web service is a [Spring Boot](https://projects.spring.io/sprin
 
 Folgende Einstellungen werden standardmässig verwendet:
 
-- `allObjectsAccessible`: `true`
+- `allObjectsAccessible`: `true` (muss mit einer _ini_-Datei überschrieben werden)
 - Es wird immer der _config/ili_-Ordner als zusätzlicher Model-Repo-Ordner verwendet.
 - Es wird immer nach einer passenden _ini_-Datei im _config/ini_-Ordner gesucht.
 
@@ -25,8 +25,8 @@ In der Anwendung vorhandene _ili_- und _ini_-Dateien sind unter http://localhost
 
 Weitere Informationen:
 
-- TODO GUI: [docs/user-manual-de.md](docs/user-manual-de.md)
-- TODO Nutzungsplanung: [docs/user-manual-de-nplso.md](docs/user-manual-de-nplso.md)
+- GUI: [docs/user-manual-de.md](docs/user-manual-de.md)
+- Nutzungsplanung: [docs/user-manual-de-nplso.md](docs/user-manual-de-nplso.md)
 - REST-API: [docs/rest-api-de.md](docs/rest-api-de.md)
 
 ## Komponenten
