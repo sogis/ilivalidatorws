@@ -3,15 +3,17 @@ name: CI/CD
 on:
   workflow_dispatch:
   push:
-
+    paths-ignore:
+      - '**.md'
+      
 jobs:
 
   build-jvm:
     env:
       DOCKER_ACCOUNT: sogis
       DOCKER_REPO: ilivalidator-web-service
-      DOCKER_PASSWORD: ${{secrets.DOCKER_HUB_ACCESS_TOKEN}}
-      DOCKER_USERNAME: ${{secrets.DOCKER_HUB_USERNAME}} 
+      DOCKER_PASSWORD: ${{secrets.DOCKER_PASSWORD}}
+      DOCKER_USERNAME: ${{secrets.DOCKER_USERNAME}} 
       BUILD_NUMBER: ${{ github.run_number }}
       VERSION: 2.0.${{ github.run_number }}
 
