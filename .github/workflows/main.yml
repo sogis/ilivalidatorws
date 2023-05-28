@@ -44,18 +44,23 @@ jobs:
         uses: docker/setup-buildx-action@v2
 
       - name: Single-platform build (for Docker image tests)
-        uses: docker/build-push-action@a66e35b9cbcf4ad0ea91ffcaf7bbad63ad9e0229  # v2.7.0 (2021-10-22)
+        uses: docker/build-push-action@v2
         with:
           context: ilivalidatorws-server
           file: ilivalidatorws-server/Dockerfile.jvm
+          tags: ${{ env.DOCKER_ACCOUNT }}/${{ env.DOCKER_REPO }}
           # tags: ${{ steps.meta.outputs.tags }}
           # labels: ${{ steps.meta.outputs.labels }}
           load: true
           pull: true 
 
-      - name: List images
+      - name: List Docker images
         run: |
           docker images
+
+      - name: Test Docker images
+        run: ./mvnw test -Dgroups="docker"
+
 
       # - name: Docker meta
       #   id: meta
