@@ -28,14 +28,14 @@ import org.jobrunr.jobs.annotations.Job;
 public class IlivalidatorService {
     private final Logger log = LoggerFactory.getLogger(this.getClass());
 
+    private static final String ILI_SUBDIRECTORY = "ili";
+    private static final String INI_SUBDIRECTORY = "ini";
+
     @Value("${app.docBase}")
     private String docBase;
 
     @Value("${app.configDirectoryName}")
     private String configDirectoryName;
-
-    private static final String ILI_SUBDIRECTORY = "ili";
-    private static final String INI_SUBDIRECTORY = "ini";
     
     /**
      * This method validates an INTERLIS transfer file with
@@ -50,7 +50,7 @@ public class IlivalidatorService {
      * @throws IOException    If config file cannot be read or copied to file system.
      * @return boolean        True, if transfer file is valid. False, if errors were found.
      */
-    @Job(name = "Ilivalidator")
+    @Job(name = "Ilivalidator", retries=0)
     public synchronized boolean validate(String[] transferFileNames, String logFileName, String[] modelFileNames,
             String[] configFileNames) throws IoxException, IOException {
         Settings settings = new Settings();
@@ -80,7 +80,6 @@ public class IlivalidatorService {
         
         // Falls man SETTING_ALL_OBJECTS_ACCESSIBLE ausschalten will, muss dies mit einem Config-File
         // gemacht werden. 
-        // TODO Prüfen, ob das jetzt geht.
         settings.setValue(Validator.SETTING_ALL_OBJECTS_ACCESSIBLE, Validator.TRUE);
 
         // Falls eine ini-Datei mitgeliefert wird, wird diese verwendet. Sonst wird im

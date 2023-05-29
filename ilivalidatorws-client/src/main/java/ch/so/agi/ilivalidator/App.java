@@ -108,7 +108,7 @@ public class App implements EntryPoint {
         input.setAttribute("type", "file");
         input.setAttribute("name", "files");
         input.multiple = true;
-        input.accept = ".itf,.xtf,.xml,.ili,.ini";
+        input.accept = ".itf,.xtf,.xml,.ili,.ini,.csv";
         form.appendChild(input);
 
         button = (HTMLButtonElement) document.createElement("button");
@@ -221,8 +221,13 @@ public class App implements EntryPoint {
 
                                         logToProtocol(messages.validationDone() + ". " + validationStatusTxt +  ": " + txtLogIconLink + "&nbsp;" + xtfLogIconLink);
                                     }
+                                } else if (httpRequest.status == 400) {
+                                    // TODO
                                 } else {
                                     console.log("status code: " + httpRequest.status);
+                                    logToProtocol(httpRequest.responseText);
+                                    apiTimer.cancel();
+                                    resetInputElements();
                                     DomGlobal.window.alert("Error fetching: " + jobUrl);
                                 }
                             };
@@ -230,6 +235,8 @@ public class App implements EntryPoint {
                             httpRequest.addEventListener("error", event -> {
                                 console.log("status text: " + httpRequest.statusText);
                                 logToProtocol(httpRequest.responseText);
+                                apiTimer.cancel();
+                                resetInputElements();
                                 DomGlobal.window.alert("Error fetching: " + jobUrl + "\n Error: " + httpRequest.status + " " + httpRequest.statusText);
                             });
                             

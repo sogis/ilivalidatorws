@@ -13,10 +13,12 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import ch.interlis.iox.IoxException;
 import ch.so.agi.ilivalidator.Utils;
 import ch.so.agi.ilivalidator.model.JobResponse;
 import ch.so.agi.ilivalidator.model.ValidationResult;
 import ch.so.agi.ilivalidator.model.ValidationType;
+import ch.so.agi.ilivalidator.service.CsvValidatorService;
 import ch.so.agi.ilivalidator.service.FilesystemStorageService;
 import ch.so.agi.ilivalidator.service.IlivalidatorService;
 
@@ -60,6 +62,9 @@ public class ApiController {
     @Autowired
     private IlivalidatorService ilivalidatorService;
     
+    @Autowired
+    private CsvValidatorService csvvalidatorService;
+
     private int counter=0;
     
     @PostMapping(value="/api/jobs", consumes = {"multipart/form-data"})
@@ -80,8 +85,13 @@ public class ApiController {
         // Momentan gibt es nur INTERLIS. Denkbar z.B. CSV, Shapefile (iox-wkf halt).
         ValidationType validationType = null;
         for (Path path : uploadedFiles) {
-            if (path.toFile().toString().toLowerCase().endsWith("xtf") || path.toFile().toString().toLowerCase().endsWith("xml") || path.toFile().toString().toLowerCase().endsWith("itf")) {
+            String fileName = path.toFile().toString().toLowerCase();
+            log.debug("<{}> File name: {}", jobId, fileName);
+            if (fileName.endsWith("xtf") || fileName.endsWith("xml") || fileName.endsWith("itf")) {
                 validationType = ValidationType.INTERLIS;
+                break;
+            } else if (fileName.endsWith("csv")) {
+                validationType = ValidationType.CSV;
                 break;
             } else {
                 validationType = ValidationType.UNDEFINED;
@@ -96,29 +106,53 @@ public class ApiController {
         
         String logFileName = Utils.getLogFileName(uploadedFiles); 
         
-        if (validationType == ValidationType.INTERLIS) {
-            List<String> transferFileNames = new ArrayList<>();
-            List<String> iliFileNames = new ArrayList<>();
-            List<String> configFileNames = new ArrayList<>();
-            
+        List<String> dataFileNames = new ArrayList<>();
+        List<String> iliFileNames = new ArrayList<>();
+        List<String> configFileNames = new ArrayList<>();
+
+        if (validationType == ValidationType.INTERLIS) {            
             for (Path path : uploadedFiles) {
                 String fileName = path.toFile().getAbsolutePath();
                 String fileExtension = FilenameUtils.getExtension(fileName).toLowerCase();
                 switch (fileExtension) {
-                    case "xtf" -> transferFileNames.add(fileName); 
-                    case "xml" -> transferFileNames.add(fileName); 
-                    case "itf" -> transferFileNames.add(fileName); 
+                    case "xtf" -> dataFileNames.add(fileName); 
+                    case "xml" -> dataFileNames.add(fileName); 
+                    case "itf" -> dataFileNames.add(fileName); 
                     case "ili" -> iliFileNames.add(fileName);
                     case "ini" -> configFileNames.add(fileName); // Wobei hier mehrere eigentlich keinen Sinn ergibt.
                 }
             }
             
-            log.debug("<{}> Number of uploaded transfer files files: {}", jobId, transferFileNames.size());
-            log.debug("<{}> Number of uploaded ili files files: {}", jobId, iliFileNames.size());
-            log.debug("<{}> Number of uploaded config files files: {}", jobId, configFileNames.size());
+            log.debug("<{}> Number of uploaded transfer files: {}", jobId, dataFileNames.size());
+            log.debug("<{}> Number of uploaded ili files: {}", jobId, iliFileNames.size());
+            log.debug("<{}> Number of uploaded config files: {}", jobId, configFileNames.size());
             
-            jobScheduler.enqueue(jobIdUuid, () -> ilivalidatorService.validate(transferFileNames.toArray(new String[0]), logFileName, iliFileNames.toArray(new String[0]), configFileNames.toArray(new String[0])));
+            jobScheduler.enqueue(jobIdUuid, () -> ilivalidatorService.validate(dataFileNames.toArray(new String[0]), logFileName, iliFileNames.toArray(new String[0]), configFileNames.toArray(new String[0])));
             log.debug("<{}> Job is being queued", jobId);
+        } else if (validationType == ValidationType.CSV) {
+            for (Path path : uploadedFiles) {
+                String fileName = path.toFile().getAbsolutePath();
+                String fileExtension = FilenameUtils.getExtension(fileName).toLowerCase();
+                switch (fileExtension) {
+                    case "csv" -> dataFileNames.add(fileName); 
+                    case "ili" -> iliFileNames.add(fileName);
+                    case "ini" -> configFileNames.add(fileName);
+                }
+
+                log.debug("<{}> Number of uploaded csv files: {}", jobId, dataFileNames.size());
+                log.debug("<{}> Number of uploaded ili files: {}", jobId, iliFileNames.size());
+                log.debug("<{}> Number of uploaded config files: {}", jobId, configFileNames.size());
+                
+                // TODO
+                // config files muss mindestens 1 vorhanden sein. Mehrere ergibt aber keinen Sinn.
+
+                try {
+                    csvvalidatorService.validate(dataFileNames.toArray(new String[0]), logFileName, iliFileNames.toArray(new String[0]), configFileNames.toArray(new String[0]));
+                } catch (IoxException | IOException e) {
+                    e.printStackTrace();
+                }
+                
+            }
         }
 
         return ResponseEntity
@@ -157,7 +191,7 @@ public class ApiController {
         } else {
             log.debug("<{}> Status request from client: {}", jobId, job.getJobState().getName());
         }
-        
+
       JobResponse jobResponse = new JobResponse(
               LocalDateTime.ofInstant(job.getCreatedAt(), ZoneId.systemDefault()),
               LocalDateTime.ofInstant(job.getUpdatedAt(), ZoneId.systemDefault()),
