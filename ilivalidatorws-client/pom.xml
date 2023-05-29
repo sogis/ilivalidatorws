@@ -36,12 +36,12 @@
     <dependency>
       <groupId>org.dominokit</groupId>
       <artifactId>domino-ui</artifactId>
-      <version>1.0.0-RC6</version>
+      <version>1.0.0-RC18</version>
     </dependency>
     <dependency>
       <groupId>org.dominokit</groupId>
       <artifactId>domino-ui</artifactId>
-      <version>1.0.0-RC6</version>
+      <version>1.0.0-RC18</version>
       <classifier>sources</classifier>
     </dependency>
     

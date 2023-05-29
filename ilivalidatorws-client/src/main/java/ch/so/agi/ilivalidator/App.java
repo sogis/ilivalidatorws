@@ -5,32 +5,8 @@ import static elemental2.dom.DomGlobal.fetch;
 import static org.jboss.elemento.Elements.*;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 
-import org.dominokit.domino.ui.badges.Badge;
-import org.dominokit.domino.ui.breadcrumbs.Breadcrumb;
-import org.dominokit.domino.ui.button.Button;
-import org.dominokit.domino.ui.datatable.ColumnConfig;
-import org.dominokit.domino.ui.datatable.DataTable;
-import org.dominokit.domino.ui.datatable.TableConfig;
-import org.dominokit.domino.ui.datatable.store.LocalListDataStore;
-import org.dominokit.domino.ui.forms.TextBox;
-import org.dominokit.domino.ui.grid.Column;
-import org.dominokit.domino.ui.grid.Row;
-import org.dominokit.domino.ui.icons.Icons;
-import org.dominokit.domino.ui.infoboxes.InfoBox;
-import org.dominokit.domino.ui.modals.ModalDialog;
-import org.dominokit.domino.ui.preloaders.Preloader;
-import org.dominokit.domino.ui.style.Color;
-import org.dominokit.domino.ui.style.ColorScheme;
-import org.dominokit.domino.ui.tabs.Tab;
-import org.dominokit.domino.ui.tabs.TabsPanel;
-import org.dominokit.domino.ui.themes.Theme;
-import org.dominokit.domino.ui.utils.TextNode;
 
 import com.google.gwt.core.client.GWT;
 import org.gwtproject.safehtml.shared.SafeHtmlUtils;
@@ -38,12 +14,9 @@ import org.gwtproject.safehtml.shared.SafeHtmlUtils;
 import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.i18n.client.NumberFormat;
 import com.google.gwt.user.client.Timer;
-import com.google.gwt.user.client.Window;
-import com.google.gwt.i18n.client.DateTimeFormat;
 
 import elemental2.core.Global;
 import elemental2.core.JsString;
-import elemental2.dom.CSSProperties;
 import elemental2.dom.DomGlobal;
 import elemental2.dom.Event;
 import elemental2.dom.EventListener;
@@ -90,11 +63,7 @@ public class App implements EntryPoint {
         init();
     }
     
-    public void init() {        
-        // Change Domino UI color scheme.
-        Theme theme = new Theme(ColorScheme.RED);
-        theme.apply();
-                        
+    public void init() {                                
         // Get url from browser (client) to find out the correct location of resources.
         Location location = DomGlobal.window.location;
 
@@ -118,7 +87,11 @@ public class App implements EntryPoint {
         container.appendChild(div().css("ilivalidatorws-title").textContent("ilivalidator web service").element());
 
         // Info
-        String infoString = "Der <i>ilivalidator web service</i> stellt eine einfache Art dar INTERLIS-Daten gegenüber einem INTERLIS-Modell zu prüfen. Sie können eine oder mehrere INTERLIS-Transferdaten (.xtf, .xml, .itf) hochladen und prüfen. Er erlaubt es auch eigene Datenmodelle und Konfigurationsdateien mitzuschicken. Weitere Informationen finden sich <a class='default-link' href='https://github.com/sogis/ilivalidatorws/blob/master/docs/user-manual-de.md' target='_blank'>hier</a>.";
+        String infoString = "Der <i>ilivalidator web service</i> stellt eine einfache Art dar INTERLIS-Daten gegenüber "
+                + "einem INTERLIS-Modell zu prüfen. Sie können eine oder mehrere INTERLIS-Transferdateien (.xtf, .xml, .itf) "
+                + "hochladen und prüfen. Er erlaubt es auch eigene Datenmodelle und Konfigurationsdateien mitzuschicken. "
+                + "Weitere Informationen finden sich <a class='default-link' "
+                + "href='https://github.com/sogis/ilivalidatorws/blob/master/docs/user-manual-de.md' target='_blank'>hier</a>.";
         container.appendChild(div().css("info").innerHtml(SafeHtmlUtils.fromTrustedString(infoString)).element());
         
         // Protocol
