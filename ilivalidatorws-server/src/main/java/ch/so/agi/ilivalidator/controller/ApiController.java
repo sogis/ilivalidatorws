@@ -204,6 +204,8 @@ public class ApiController {
         } else if (jobResponse.status().equalsIgnoreCase("FAILED")) {
             // Jobrunr-Api erlaubt aus mir nicht auf den Stacktrace zuzugreifen, der aufgetreten ist.
             // Eventuell ginge es mit der Pro-Version. Oder man liest es selber aus der DB.
+            // Nein. Sollte gehen: https://github.com/jobrunr/jobrunr/blob/e657aaf5dd15a3bf11e87b47b73d9dcf8d07b367/core/src/main/java/org/jobrunr/jobs/Job.java#L40
+            // JobResponse braucht noch sowas wie jobErrorMessage
             return ResponseEntity.badRequest().body(jobResponse);
         } else {
             return ResponseEntity.ok().header("Retry-After", "30").body(jobResponse);            
