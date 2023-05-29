@@ -201,7 +201,7 @@ Or without downloading all the snapshots again:
 ```
 
 ```
-docker build -t sogis/ilivalidator-web-service:latest -f ilivalidatorws-server/Dockerfile.jvm .
+docker build -t sogis/ilivalidator-web-service:latest -f Dockerfile.jvm .
 ```
 
 ```
