@@ -46,6 +46,8 @@ public class App implements EntryPoint {
     private NumberFormat fmtDefault = NumberFormat.getDecimalFormat();
     private NumberFormat fmtPercent = NumberFormat.getFormat("#0.0");
 
+    // Kann auch via Settings vom Server kommen.
+    // Wäre momentan aber einziges Setting vom Server. Momentan sein lassen.
     private static int MAX_FILES_SIZE_MB = 300; 
     
     private static final String API_PATH_UPLOAD = "api/jobs";
@@ -178,7 +180,7 @@ public class App implements EntryPoint {
                         apiTimer.cancel();
                     }
                     
-                    logToProtocol("Die Datei wird validiert...");
+                    logToProtocol(messages.validateFile());
 
                     apiTimer = new Timer() {
                         public void run() {                          
@@ -205,14 +207,14 @@ public class App implements EntryPoint {
                                         String logFileHref = ((JsString) resultJsonObj.get("logFileLocation")).normalize();
                                         String xtfLogFileHref = ((JsString) resultJsonObj.get("xtfLogFileLocation")).normalize();
 
-                                        String txtLogIconLink = "<a href=\""+logFileHref+"\" class=\"badge-link\">\n"
+                                        String txtLogIconLink = "<a href=\""+logFileHref+"\" target=\"blank\" class=\"badge-link\">\n"
                                                 + "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" fill=\"currentColor\" class=\"bi bi-file-earmark-text\" viewBox=\"0 0 16 16\">\n"
                                                 + "  <path d=\"M5.5 7a.5.5 0 0 0 0 1h5a.5.5 0 0 0 0-1h-5zM5 9.5a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5zm0 2a.5.5 0 0 1 .5-.5h2a.5.5 0 0 1 0 1h-2a.5.5 0 0 1-.5-.5z\"></path>\n"
                                                 + "  <path d=\"M9.5 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V4.5L9.5 0zm0 1v2A1.5 1.5 0 0 0 11 4.5h2V14a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h5.5z\"></path>\n"
                                                 + "</svg>\n"
                                                 + "</a>";
                                         
-                                        String xtfLogIconLink = "<a href=\""+xtfLogFileHref+"\" class=\"badge-link\">\n"
+                                        String xtfLogIconLink = "<a href=\""+xtfLogFileHref+"\" target=\"blank\" class=\"badge-link\">\n"
                                                 + "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" fill=\"currentColor\" class=\"bi bi-file-earmark-code\" viewBox=\"0 0 16 16\">\n"
                                                 + "  <path d=\"M14 4.5V14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h5.5L14 4.5zm-3 0A1.5 1.5 0 0 1 9.5 3V1H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V4.5h-2z\"/>\n"
                                                 + "  <path d=\"M8.646 6.646a.5.5 0 0 1 .708 0l2 2a.5.5 0 0 1 0 .708l-2 2a.5.5 0 0 1-.708-.708L10.293 9 8.646 7.354a.5.5 0 0 1 0-.708zm-1.292 0a.5.5 0 0 0-.708 0l-2 2a.5.5 0 0 0 0 .708l2 2a.5.5 0 0 0 .708-.708L5.707 9l1.647-1.646a.5.5 0 0 0 0-.708z\"/>\n"
@@ -222,7 +224,9 @@ public class App implements EntryPoint {
                                         logToProtocol(messages.validationDone() + ". " + validationStatusTxt +  ": " + txtLogIconLink + "&nbsp;" + xtfLogIconLink);
                                     }
                                 } else if (httpRequest.status == 400) {
-                                    // TODO
+                                    apiTimer.cancel();
+                                    resetInputElements();
+                                    logToProtocol(messages.validationProcessingError());                                    
                                 } else {
                                     console.log("status code: " + httpRequest.status);
                                     logToProtocol(httpRequest.responseText);

@@ -86,7 +86,7 @@ public class ApiController {
         ValidationType validationType = null;
         for (Path path : uploadedFiles) {
             String fileName = path.toFile().toString().toLowerCase();
-            log.debug("<{}> File name: {}", jobId, fileName);
+            //log.debug("<{}> File name: {}", jobId, fileName);
             if (fileName.endsWith("xtf") || fileName.endsWith("xml") || fileName.endsWith("itf")) {
                 validationType = ValidationType.INTERLIS;
                 break;
@@ -131,28 +131,23 @@ public class ApiController {
             log.debug("<{}> Job is being queued", jobId);
         } else if (validationType == ValidationType.CSV) {
             for (Path path : uploadedFiles) {
+                log.debug("<{}> File name: {}", jobId, path.toFile().getName());
+
                 String fileName = path.toFile().getAbsolutePath();
                 String fileExtension = FilenameUtils.getExtension(fileName).toLowerCase();
                 switch (fileExtension) {
                     case "csv" -> dataFileNames.add(fileName); 
                     case "ili" -> iliFileNames.add(fileName);
                     case "ini" -> configFileNames.add(fileName);
-                }
-
-                log.debug("<{}> Number of uploaded csv files: {}", jobId, dataFileNames.size());
-                log.debug("<{}> Number of uploaded ili files: {}", jobId, iliFileNames.size());
-                log.debug("<{}> Number of uploaded config files: {}", jobId, configFileNames.size());
-                
-                // TODO
-                // config files muss mindestens 1 vorhanden sein. Mehrere ergibt aber keinen Sinn.
-
-                try {
-                    csvvalidatorService.validate(dataFileNames.toArray(new String[0]), logFileName, iliFileNames.toArray(new String[0]), configFileNames.toArray(new String[0]));
-                } catch (IoxException | IOException e) {
-                    e.printStackTrace();
-                }
-                
+                }                
             }
+            
+            log.debug("<{}> Number of uploaded csv files: {}", jobId, dataFileNames.size());
+            log.debug("<{}> Number of uploaded ili files: {}", jobId, iliFileNames.size());
+            log.debug("<{}> Number of uploaded config files: {}", jobId, configFileNames.size());
+
+            jobScheduler.enqueue(jobIdUuid, () -> csvvalidatorService.validate(dataFileNames.toArray(new String[0]), logFileName, iliFileNames.toArray(new String[0]), configFileNames.toArray(new String[0])));
+            log.debug("<{}> Job is being queued", jobId);
         }
 
         return ResponseEntity
@@ -160,7 +155,6 @@ public class ApiController {
                 .header("Operation-Location", getHost()+"/api/jobs/"+jobId)
                 .body(null);        
     }
-    
     
     @GetMapping("/api/jobs/{jobId}")
     public ResponseEntity<?> getJobById(@PathVariable String jobId) {
@@ -175,12 +169,14 @@ public class ApiController {
             xtfLogFileLocation = logFileLocation + ".xtf"; 
             
             try {
-                // JobResult nur bei Pro-Version
+                // JobResult nur bei Pro-Version. Darum handgestrickt.
                 String content = Files.readString(Paths.get(logFileName));
                 if (content.contains("...validation done")) {
                     validationResult = ValidationResult.SUCCEEDED.toString();
                 } else if (content.contains("...validation failed")) {
                     validationResult = ValidationResult.FAILED.toString();
+                } else if (content.contains("Error")) {
+                    validationResult = ValidationResult.FAILED.toString();                    
                 } else {
                     validationResult = ValidationResult.UNKNOWN.toString();
                 }
@@ -192,19 +188,25 @@ public class ApiController {
             log.debug("<{}> Status request from client: {}", jobId, job.getJobState().getName());
         }
 
-      JobResponse jobResponse = new JobResponse(
-              LocalDateTime.ofInstant(job.getCreatedAt(), ZoneId.systemDefault()),
-              LocalDateTime.ofInstant(job.getUpdatedAt(), ZoneId.systemDefault()),
-              job.getState().name(),
-              validationResult,
-              logFileLocation,
-              xtfLogFileLocation
-          );
+        JobResponse jobResponse = new JobResponse(
+                LocalDateTime.ofInstant(job.getCreatedAt(), ZoneId.systemDefault()),
+                LocalDateTime.ofInstant(job.getUpdatedAt(), ZoneId.systemDefault()), 
+                job.getState().name(),
+                validationResult, 
+                logFileLocation, 
+                xtfLogFileLocation
+                );
         
-        if (!jobResponse.status().equalsIgnoreCase("SUCCEEDED")) {
-            return ResponseEntity.ok().header("Retry-After", "30").body(jobResponse);
-        } else {
+        // Falls DELETED als API eingeführt wird, muss dies wohl auch 
+        // behandelt werden.
+        if (jobResponse.status().equalsIgnoreCase("SUCCEEDED")) {
             return ResponseEntity.ok().body(jobResponse);
+        } else if (jobResponse.status().equalsIgnoreCase("FAILED")) {
+            // Jobrunr-Api erlaubt aus mir nicht auf den Stacktrace zuzugreifen, der aufgetreten ist.
+            // Eventuell ginge es mit der Pro-Version. Oder man liest es selber aus der DB.
+            return ResponseEntity.badRequest().body(jobResponse);
+        } else {
+            return ResponseEntity.ok().header("Retry-After", "30").body(jobResponse);            
         }
     }
     

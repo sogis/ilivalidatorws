@@ -19,6 +19,7 @@ import ch.so.agi.ilivalidator.model.JobResponse;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 import java.io.BufferedReader;
 import java.io.InputStream;
@@ -178,7 +179,7 @@ public abstract class ApiTests {
     } 
     
     // Dateien mit externer Rolle. 
-    // Dateien weisen Fehler auf und mit einem Config-File wird die allObjectsAccessible überschrieben.
+    // Dateien weisen Fehler auf und mit einem Config-File wird die allObjectsAccessible überschrieben und nicht geprüft.
     @Test
     public void validation_Ok_Interlis2Files_ConfigFile() throws Exception {
         String serverUrl = "http://localhost:"+port+REST_ENDPOINT;
@@ -276,22 +277,207 @@ public abstract class ApiTests {
         assertTrue(logFileContents.contains("Info: ...validation failed"));
     }
     
+    // Eine fehlerfreie CSV-Datei wird geprüft. Es wird eine Config-Datei mit hochgeladen. 
+    @Test
+    public void validation_Ok_CsvFile_ConfigFile() throws Exception {
+        String serverUrl = "http://localhost:"+port+REST_ENDPOINT;
+
+        MultiValueMap<String, Object> parameters = new LinkedMultiValueMap<String, Object>();
+        parameters.add("files", new FileSystemResource("src/test/data/ch.so.hba.gebaeude_sap_20230124.csv"));
+        parameters.add("files", new FileSystemResource("src/test/data/ch.so.hba.gebaeude_sap.ini"));
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Content-Type", "multipart/form-data");
+        headers.set("Accept", "text/plain");
+
+        // Datei hochladen und Response-Status-Code auswerten
+        ResponseEntity<String> postResponse = restTemplate.postForEntity(
+                serverUrl, new HttpEntity<MultiValueMap<String, Object>>(parameters, headers), String.class);
+
+        assertEquals(202, postResponse.getStatusCode().value());
+        
+        // Warten, bis die Validierung durch ist (=SUCCEEDED)
+        String operationLocation = postResponse.getHeaders().toSingleValueMap().get(OPERATION_LOCATION_HEADER);
+        
+        await()
+            .with().pollInterval(RESULT_POLL_INTERVAL, TimeUnit.SECONDS)
+            .and()
+            .with().atMost(RESULT_WAIT, TimeUnit.MINUTES)
+            .until(new MyCallable(operationLocation, restTemplate));
+
+        // Logfile herunterladen und auswerten
+        ResponseEntity<JobResponse> jobResponse = restTemplate.getForEntity(operationLocation, JobResponse.class);
+        
+        assertEquals("SUCCEEDED", jobResponse.getBody().status());
+        assertEquals("SUCCEEDED", jobResponse.getBody().validationStatus());
+        
+        URL logFileUrl = new URL(jobResponse.getBody().logFileLocation());
+
+        String logFileContents = null;
+        try (InputStream in = logFileUrl.openStream()) {
+            BufferedReader reader = new BufferedReader(new InputStreamReader(in));
+            logFileContents = reader.lines().collect(Collectors.joining(System.lineSeparator()));
+        }
+        assertTrue(logFileContents.contains("Info: assume unknown external objects"));
+        assertTrue(logFileContents.contains("Info: ...validation done"));
+    } 
+
+    // Eine CSV-Datei mit Fehlern wird geprüft. Es wird eine Config-Datei mit hochgeladen. 
+    @Test
+    public void validation_Fail_CsvFile_ConfigFile() throws Exception {
+        String serverUrl = "http://localhost:"+port+REST_ENDPOINT;
+
+        MultiValueMap<String, Object> parameters = new LinkedMultiValueMap<String, Object>();
+        parameters.add("files", new FileSystemResource("src/test/data/ch.so.hba.gebaeude_sap_20230124_errors.csv"));
+        parameters.add("files", new FileSystemResource("src/test/data/ch.so.hba.gebaeude_sap.ini"));
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Content-Type", "multipart/form-data");
+        headers.set("Accept", "text/plain");
+
+        // Datei hochladen und Response-Status-Code auswerten
+        ResponseEntity<String> postResponse = restTemplate.postForEntity(
+                serverUrl, new HttpEntity<MultiValueMap<String, Object>>(parameters, headers), String.class);
+
+        assertEquals(202, postResponse.getStatusCode().value());
+        
+        // Warten, bis die Validierung durch ist (=SUCCEEDED)
+        String operationLocation = postResponse.getHeaders().toSingleValueMap().get(OPERATION_LOCATION_HEADER);
+        
+        await()
+            .with().pollInterval(RESULT_POLL_INTERVAL, TimeUnit.SECONDS)
+            .and()
+            .with().atMost(RESULT_WAIT, TimeUnit.MINUTES)
+            .until(new MyCallable(operationLocation, restTemplate));
+
+        // Logfile herunterladen und auswerten
+        ResponseEntity<JobResponse> jobResponse = restTemplate.getForEntity(operationLocation, JobResponse.class);
+        
+        assertEquals("SUCCEEDED", jobResponse.getBody().status());
+        assertEquals("FAILED", jobResponse.getBody().validationStatus());
+        
+        URL logFileUrl = new URL(jobResponse.getBody().logFileLocation());
+
+        String logFileContents = null;
+        try (InputStream in = logFileUrl.openStream()) {
+            BufferedReader reader = new BufferedReader(new InputStreamReader(in));
+            logFileContents = reader.lines().collect(Collectors.joining(System.lineSeparator()));
+        }
+        assertTrue(logFileContents.contains("Info: assume unknown external objects"));
+        assertTrue(logFileContents.contains("Info: ...validation failed"));
+        assertTrue(logFileContents.contains("Error: line 3: SO_HBA_Gebaeude_20230111.Gebaeude.Gebaeude: tid o2: value 9605951.200 is out of range in attribute xkoordinaten"));
+        assertTrue(logFileContents.contains("Error: line 4: SO_HBA_Gebaeude_20230111.Gebaeude.Gebaeude: tid o3: Attribute EGID is length restricted to 20"));
+    } 
+
+    // Eine fehlerfreie CSV-Datei wird geprüft. Es wird eine Config-Datei und Modell mit hochgeladen. 
+    @Test
+    public void validation_Ok_CsvFile_ConfigFile_ModelFile() throws Exception {
+        String serverUrl = "http://localhost:"+port+REST_ENDPOINT;
+
+        MultiValueMap<String, Object> parameters = new LinkedMultiValueMap<String, Object>();
+        parameters.add("files", new FileSystemResource("src/test/data/ch.so.hba.gebaeude_sap_20230124.csv"));
+        parameters.add("files", new FileSystemResource("src/test/data/ch.so.hba.gebaeude_sap_upload_model.ini"));
+        parameters.add("files", new FileSystemResource("src/test/data/CSV_Model_A.ili"));
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Content-Type", "multipart/form-data");
+        headers.set("Accept", "text/plain");
+
+        // Datei hochladen und Response-Status-Code auswerten
+        ResponseEntity<String> postResponse = restTemplate.postForEntity(
+                serverUrl, new HttpEntity<MultiValueMap<String, Object>>(parameters, headers), String.class);
+
+        assertEquals(202, postResponse.getStatusCode().value());
+        
+        // Warten, bis die Validierung durch ist (=SUCCEEDED)
+        String operationLocation = postResponse.getHeaders().toSingleValueMap().get(OPERATION_LOCATION_HEADER);
+        
+        await()
+            .with().pollInterval(RESULT_POLL_INTERVAL, TimeUnit.SECONDS)
+            .and()
+            .with().atMost(RESULT_WAIT, TimeUnit.MINUTES)
+            .until(new MyCallable(operationLocation, restTemplate));
+
+        // Logfile herunterladen und auswerten
+        ResponseEntity<JobResponse> jobResponse = restTemplate.getForEntity(operationLocation, JobResponse.class);
+        
+        assertEquals("SUCCEEDED", jobResponse.getBody().status());
+        assertEquals("SUCCEEDED", jobResponse.getBody().validationStatus());
+        
+        URL logFileUrl = new URL(jobResponse.getBody().logFileLocation());
+
+        String logFileContents = null;
+        try (InputStream in = logFileUrl.openStream()) {
+            BufferedReader reader = new BufferedReader(new InputStreamReader(in));
+            logFileContents = reader.lines().collect(Collectors.joining(System.lineSeparator()));
+        }
+        assertTrue(logFileContents.contains("Info: assume unknown external objects"));        
+        assertTrue(logFileContents.contains("modelNames <CSV_Model_A>"));
+        assertTrue(logFileContents.contains("Info: ...validation done"));
+    } 
+
+    // Eine fehlerfreie CSV-Datei wird geprüft. Weil keine Config-Datei hochgeladen wird
+    // kann die CSV-Datei nicht geprüft werden und es wird ein Fehler zurückgeliefert.
+    @Test
+    public void validation_Fail_CsvFile() throws Exception {
+        String serverUrl = "http://localhost:"+port+REST_ENDPOINT;
+
+        MultiValueMap<String, Object> parameters = new LinkedMultiValueMap<String, Object>();
+        parameters.add("files", new FileSystemResource("src/test/data/ch.so.hba.gebaeude_sap_20230124.csv"));
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Content-Type", "multipart/form-data");
+        headers.set("Accept", "text/plain");
+
+        // Datei hochladen und Response-Status-Code auswerten
+        ResponseEntity<String> postResponse = restTemplate.postForEntity(
+                serverUrl, new HttpEntity<MultiValueMap<String, Object>>(parameters, headers), String.class);
+
+        assertEquals(202, postResponse.getStatusCode().value());
+        
+        // Warten, bis die Validierung durch ist (=SUCCEEDED)
+        String operationLocation = postResponse.getHeaders().toSingleValueMap().get(OPERATION_LOCATION_HEADER);
+        
+        await()
+            .with().pollInterval(RESULT_POLL_INTERVAL, TimeUnit.SECONDS)
+            .and()
+            .with().atMost(RESULT_WAIT, TimeUnit.MINUTES)
+            .until(new MyCallable(operationLocation, restTemplate, "FAILED"));
+
+        // Logfile herunterladen und auswerten
+        ResponseEntity<JobResponse> jobResponse = restTemplate.getForEntity(operationLocation, JobResponse.class);
+        
+        assertEquals("FAILED", jobResponse.getBody().status());
+        assertNull(jobResponse.getBody().validationStatus());
+        assertNull(jobResponse.getBody().validationStatus());
+        assertNull(jobResponse.getBody().validationStatus());
+        assertNull(jobResponse.getBody().validationStatus());        
+    } 
+    
     public class MyCallable implements Callable<Boolean> {  
         private final String operationLocation;
         private final TestRestTemplate restTemplate;
+        private String status;
            
+        public MyCallable(String operationLocation, TestRestTemplate restTemplate, String status) {
+            this.operationLocation = operationLocation;
+            this.restTemplate = restTemplate;
+            this.status = status;
+        }
+
         public MyCallable(String operationLocation, TestRestTemplate restTemplate) {
             this.operationLocation = operationLocation;
             this.restTemplate = restTemplate;
+            this.status = "SUCCEEDED";
         }
-       
+        
         @Override
         public Boolean call() throws Exception {
             logger.info("*******************************************************");
             logger.info("polling: {}", operationLocation);
             logger.info("*******************************************************");
             ResponseEntity<JobResponse> jobResponse = restTemplate.getForEntity(operationLocation, JobResponse.class);
-            return jobResponse.getBody().status().equalsIgnoreCase("SUCCEEDED") ? true : false;            
+            return jobResponse.getBody().status().equalsIgnoreCase(this.status) ? true : false;            
         }
     }
 }

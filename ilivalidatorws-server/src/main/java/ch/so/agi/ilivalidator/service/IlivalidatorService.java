@@ -57,11 +57,6 @@ public class IlivalidatorService {
         settings.setValue(Validator.SETTING_LOGFILE, logFileName);
         settings.setValue(Validator.SETTING_XTFLOG, logFileName + ".xtf");
 
-//        log.info("1 {}", transferFileNames);
-//        log.info("2 {}", logFileName);
-//        log.info("3 {}", modelFileNames);
-//        log.info("4 {}", configFileNames);
-
         String settingIlidirs = Validator.SETTING_DEFAULT_ILIDIRS;
 
         // Es wird immer der config/ili-Ordner (d.h. dort wo die mit der Anwendung
@@ -117,12 +112,6 @@ public class IlivalidatorService {
         log.info("Validation end");
 
         return valid;
-
-//        // TODO
-//        // Das sollte nun gehen:
-//        // Leider scheint es nicht steuerbar zu sein via toml.
-//        // https://github.com/claeis/ilivalidator/issues/350
-//        // https://github.com/claeis/ilivalidator/issues/83
     }
 
     /*
