@@ -199,9 +199,9 @@ public class ApiController {
         
         // Falls DELETED als API eingeführt wird, muss dies wohl auch 
         // behandelt werden.
-        if (jobResponse.status().equalsIgnoreCase("SUCCEEDED")) {
+        if (jobResponse.status().equals(StateName.SUCCEEDED.toString())) {
             return ResponseEntity.ok().body(jobResponse);
-        } else if (jobResponse.status().equalsIgnoreCase("FAILED")) {
+        } else if (jobResponse.status().equals(StateName.FAILED.toString())) {
             // Jobrunr-Api erlaubt aus mir nicht auf den Stacktrace zuzugreifen, der aufgetreten ist.
             // Eventuell ginge es mit der Pro-Version. Oder man liest es selber aus der DB.
             // Nein. Sollte gehen: https://github.com/jobrunr/jobrunr/blob/e657aaf5dd15a3bf11e87b47b73d9dcf8d07b367/core/src/main/java/org/jobrunr/jobs/Job.java#L40
