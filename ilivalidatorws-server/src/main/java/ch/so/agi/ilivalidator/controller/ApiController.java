@@ -3,6 +3,7 @@ package ch.so.agi.ilivalidator.controller;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -34,8 +35,10 @@ import java.util.UUID;
 
 import org.apache.commons.io.FilenameUtils;
 import org.jobrunr.jobs.Job;
+import org.jobrunr.jobs.states.JobState;
 import org.jobrunr.jobs.states.StateName;
 import org.jobrunr.scheduling.JobScheduler;
+import org.jobrunr.storage.JobNotFoundException;
 import org.jobrunr.storage.StorageProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,8 +51,10 @@ import org.slf4j.LoggerFactory;
 public class ApiController {
     private final Logger log = LoggerFactory.getLogger(this.getClass());
 
-    private static String LOG_ENDPOINT = "logs";
-
+    private static final String LOG_ENDPOINT = "logs";
+    private static final String JOB_NOT_FOUND = "Job not found";
+    private static final String JOB_DELETED = "Job successfully deleted";
+    
     @Autowired
     private FilesystemStorageService fileStorageService;
 
@@ -65,7 +70,6 @@ public class ApiController {
     @Autowired
     private CsvValidatorService csvvalidatorService;
 
-    private int counter=0;
     
     @PostMapping(value="/api/jobs", consumes = {"multipart/form-data"})
     // @RequestPart anstelle von @RequestParam und @RequestBody damit swagger korrekt funktioniert.
@@ -156,59 +160,98 @@ public class ApiController {
                 .body(null);        
     }
     
+    @DeleteMapping("/api/jobs/{jobId}") 
+    public ResponseEntity<?> deleteJobById(@PathVariable String jobId) {
+        int ret = storageProvider.deletePermanently(UUID.fromString(jobId));
+        if (ret==1) {
+            JobResponse jobResponse = new JobResponse(
+                    null,
+                    null, 
+                    null,
+                    JOB_DELETED,
+                    null, 
+                    null, 
+                    null
+                    );
+            return ResponseEntity.ok().body(jobResponse);
+        } else {
+            JobResponse jobResponse = new JobResponse(
+                    null,
+                    null, 
+                    null,
+                    JOB_NOT_FOUND,
+                    null, 
+                    null, 
+                    null
+                    );
+            return ResponseEntity.badRequest().body(jobResponse);
+        }
+    }
+    
     @GetMapping("/api/jobs/{jobId}")
     public ResponseEntity<?> getJobById(@PathVariable String jobId) {
-        Job job = storageProvider.getJobById(UUID.fromString(jobId));        
-        String logFileName = job.getJobDetails().getJobParameters().get(1).getObject().toString();  
+        try {
+            Job job = storageProvider.getJobById(UUID.fromString(jobId));        
+            String logFileName = job.getJobDetails().getJobParameters().get(1).getObject().toString();  
 
-        String logFileLocation = null;
-        String xtfLogFileLocation = null;
-        String validationResult = null;
-        if (job.getJobState().getName().equals(StateName.SUCCEEDED)) {
-            logFileLocation = Utils.fixUrl(getHost() + "/" + LOG_ENDPOINT + "/" + Utils.getLogFileUrlPathElement(logFileName));
-            xtfLogFileLocation = logFileLocation + ".xtf"; 
-            
-            try {
-                // JobResult nur bei Pro-Version. Darum handgestrickt.
-                String content = Files.readString(Paths.get(logFileName));
-                if (content.contains("...validation done")) {
-                    validationResult = ValidationResult.SUCCEEDED.toString();
-                } else if (content.contains("...validation failed")) {
-                    validationResult = ValidationResult.FAILED.toString();
-                } else if (content.contains("Error")) {
-                    validationResult = ValidationResult.FAILED.toString();                    
-                } else {
+            String logFileLocation = null;
+            String xtfLogFileLocation = null;
+            String validationResult = null;
+            if (job.getJobState().getName().equals(StateName.SUCCEEDED)) {
+                logFileLocation = Utils.fixUrl(getHost() + "/" + LOG_ENDPOINT + "/" + Utils.getLogFileUrlPathElement(logFileName));
+                xtfLogFileLocation = logFileLocation + ".xtf"; 
+                
+                try {
+                    // JobResult nur bei Pro-Version. Darum handgestrickt.
+                    String content = Files.readString(Paths.get(logFileName));
+                    if (content.contains("...validation done")) {
+                        validationResult = ValidationResult.SUCCEEDED.toString();
+                    } else if (content.contains("...validation failed")) {
+                        validationResult = ValidationResult.FAILED.toString();
+                    } else if (content.contains("Error")) {
+                        validationResult = ValidationResult.FAILED.toString();                    
+                    } else {
+                        validationResult = ValidationResult.UNKNOWN.toString();
+                    }
+                } catch (IOException e) {
                     validationResult = ValidationResult.UNKNOWN.toString();
+                    e.printStackTrace();
                 }
-            } catch (IOException e) {
-                validationResult = ValidationResult.UNKNOWN.toString();
-                e.printStackTrace();
+            } else {
+                log.debug("<{}> Status request from client: {}", jobId, job.getJobState().getName());
             }
-        } else {
-            log.debug("<{}> Status request from client: {}", jobId, job.getJobState().getName());
-        }
 
-        JobResponse jobResponse = new JobResponse(
-                LocalDateTime.ofInstant(job.getCreatedAt(), ZoneId.systemDefault()),
-                LocalDateTime.ofInstant(job.getUpdatedAt(), ZoneId.systemDefault()), 
-                job.getState().name(),
-                validationResult, 
-                logFileLocation, 
-                xtfLogFileLocation
-                );
-        
-        // Falls DELETED als API eingeführt wird, muss dies wohl auch 
-        // behandelt werden.
-        if (jobResponse.status().equals(StateName.SUCCEEDED.toString())) {
-            return ResponseEntity.ok().body(jobResponse);
-        } else if (jobResponse.status().equals(StateName.FAILED.toString())) {
-            // Jobrunr-Api erlaubt aus mir nicht auf den Stacktrace zuzugreifen, der aufgetreten ist.
-            // Eventuell ginge es mit der Pro-Version. Oder man liest es selber aus der DB.
-            // Nein. Sollte gehen: https://github.com/jobrunr/jobrunr/blob/e657aaf5dd15a3bf11e87b47b73d9dcf8d07b367/core/src/main/java/org/jobrunr/jobs/Job.java#L40
-            // JobResponse braucht noch sowas wie jobErrorMessage
+            String message = null;
+            JobResponse jobResponse = new JobResponse(
+                    LocalDateTime.ofInstant(job.getCreatedAt(), ZoneId.systemDefault()),
+                    LocalDateTime.ofInstant(job.getUpdatedAt(), ZoneId.systemDefault()), 
+                    job.getState().name(),
+                    message,
+                    validationResult, 
+                    logFileLocation, 
+                    xtfLogFileLocation
+                    );
+            
+            if (jobResponse.status().equals(StateName.SUCCEEDED.toString())) {
+                return ResponseEntity.ok().body(jobResponse);
+            } else if (jobResponse.status().equals(StateName.FAILED.toString())) {
+                // Jobrunr-Api erlaubt aus mir nicht auf den Stacktrace zuzugreifen, der aufgetreten ist.
+                // Eventuell ginge es mit der Pro-Version. Oder man liest es selber aus der DB.
+                return ResponseEntity.badRequest().body(jobResponse);
+            } else {
+                return ResponseEntity.ok().header("Retry-After", "30").body(jobResponse);            
+            }
+        } catch (JobNotFoundException e) {
+            JobResponse jobResponse = new JobResponse(
+                    null,
+                    null, 
+                    null,
+                    JOB_NOT_FOUND,
+                    null, 
+                    null, 
+                    null
+                    );
             return ResponseEntity.badRequest().body(jobResponse);
-        } else {
-            return ResponseEntity.ok().header("Retry-After", "30").body(jobResponse);            
         }
     }
     

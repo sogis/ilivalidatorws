@@ -50,7 +50,7 @@ public class App implements EntryPoint {
     // Wäre momentan aber einziges Setting vom Server. Momentan sein lassen.
     private static int MAX_FILES_SIZE_MB = 300; 
     
-    private static final String API_PATH_UPLOAD = "api/jobs";
+    private static final String API_ENDPOINT = "api/jobs";
     private static final String HEADER_OPERATION_LOCATION = "Operation-Location";
     
     private Timer apiTimer;
@@ -161,7 +161,7 @@ public class App implements EntryPoint {
                 init.setMethod("POST");
                 init.setBody(formData);
                 
-                DomGlobal.fetch(API_PATH_UPLOAD, init)
+                DomGlobal.fetch(API_ENDPOINT, init)
                 .then(response -> {
                     if (!response.ok) {
                         resetInputElements();
@@ -226,7 +226,14 @@ public class App implements EntryPoint {
                                 } else if (httpRequest.status == 400) {
                                     apiTimer.cancel();
                                     resetInputElements();
-                                    logToProtocol(messages.validationProcessingError());                                    
+
+                                    JsPropertyMap<?> resultJsonObj = (JsPropertyMap<?>) Global.JSON.parse(httpRequest.responseText);
+                                     if (resultJsonObj.get("message") != null) {
+                                         String message = ((JsString) resultJsonObj.get("message")).normalize();
+                                         logToProtocol(messages.validationProcessingError() +": " + message);                                    
+                                     } else {
+                                         logToProtocol(messages.validationProcessingError() +".");                                    
+                                     }                                    
                                 } else {
                                     console.log("status code: " + httpRequest.status);
                                     logToProtocol(httpRequest.responseText);

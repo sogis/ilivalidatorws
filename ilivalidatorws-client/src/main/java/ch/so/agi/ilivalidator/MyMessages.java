@@ -24,7 +24,7 @@ public interface MyMessages extends Messages {
     @DefaultMessage("The file is being validated ...") 
     String validateFile();
 
-    @DefaultMessage("The file cannot be validated.") 
+    @DefaultMessage("The file cannot be validated") 
     String validationProcessingError();
 
     @DefaultMessage("Validation done") 

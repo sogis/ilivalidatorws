@@ -59,6 +59,38 @@ Date: Sat, 23 Jul 2022 16:43:29 GMT
 {"createdAt":"2022-07-23T16:42:15.68317767","updatedAt":"2022-07-23T16:43:16.011457796","status":"SUCCEEDED","validationResult":"SUCCEEDED","logFileLocation":"http://localhost:8080/logs/ilivalidator_8148789347157812698/254900.itf.log","xtfLogFileLocation":"http://localhost:8080/logs/ilivalidator_8148789347157812698/254900.itf.log.xtf"}
 ```
 
+Jobs können auch gelöscht werden. Wird der Job bereits ausgeführt, wird der Eintrag in der Datenbank gelöscht, der laufende Job wird jedoch zu Ende prozessiert.
+
+```
+curl -X DELETE http://localhost:8080/api/jobs/f07e0038-98a8-4b6c-87c1-016875a87508
+```
+
+liefert - falls der Job in der Datenbank gefunden wird - folgendes:
+
+```
+HTTP/1.1 200
+vary: accept-encoding
+Content-Type: application/json
+Transfer-Encoding: chunked
+Date: Tue, 30 May 2023 16:41:49 GMT
+Connection: close
+
+{"message":"Job successfully deleted"}
+```
+
+Falls der Job nicht gefunden wird oder beim Abfragen des Status mit GET:
+
+```
+HTTP/1.1 400
+vary: accept-encoding
+Content-Type: application/json
+Transfer-Encoding: chunked
+Date: Tue, 30 May 2023 16:41:49 GMT
+Connection: close
+
+{"message":"Job not deleted"}
+```
+
 ## Links
 
 - https://dunnhq.com/posts/2021/long-running-rest-requests/
