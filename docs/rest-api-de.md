@@ -15,6 +15,7 @@ curl -i -X POST -F 'files[]=@ch.so.afu.abbaustellen.xtf' http://localhost:8080/a
 
 Es können mehrere Dateien (Transferfiles, Modell und Config-Dateien) hochgeladen werden:
 
+```
 curl -i -X POST -F 'files=@ch.so.afu.abbaustellen.xtf' -F 'files=@ch.so.avt.verkehrszaehlstellen.xtf' http://localhost:8080/api/jobs
 ```
 
