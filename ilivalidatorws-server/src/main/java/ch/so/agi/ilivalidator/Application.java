@@ -83,7 +83,7 @@ public class Application extends SpringBootServletInitializer {
 
             // Root-Verzeichnis und das sichtbare "config"-Verzeichnis und
             // Unterverzeichnisse für das Directory-Listing erstellen.
-            // Die toml- und ili-Dateien werden in die entsprechenden
+            // Die ini- und ili-Dateien werden in die entsprechenden
             // Verzeichnisse kopiert. 
             if (!new File(docBase).exists()) {
                 new File(docBase).mkdir();
