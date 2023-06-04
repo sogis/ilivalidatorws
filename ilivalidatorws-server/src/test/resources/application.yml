@@ -88,3 +88,5 @@ app:
   folderPrefix: ${FOLDER_PREFIX:ilivalidatorws_}
   restApiEnabled: ${REST_API_ENABLED:true}
   cleanerEnabled: ${CLEANER_ENABLED:true}
+  storageService: ${STORAGE_SERVICE:filesystem}
+

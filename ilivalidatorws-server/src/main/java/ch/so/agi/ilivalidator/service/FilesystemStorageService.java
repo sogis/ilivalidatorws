@@ -17,7 +17,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import org.springframework.web.multipart.MultipartFile;
 
-@Service
+//@Service
 public class FilesystemStorageService implements StorageService {
     private final Logger log = LoggerFactory.getLogger(this.getClass());
 

@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.web.servlet.ServletComponentScan;
 import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
@@ -21,6 +22,10 @@ import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.core.io.support.ResourcePatternResolver;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.web.filter.ForwardedHeaderFilter;
+
+import ch.so.agi.ilivalidator.service.FilesystemStorageService;
+import ch.so.agi.ilivalidator.service.S3FakeStorageService;
+import ch.so.agi.ilivalidator.service.StorageService;
 
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
@@ -73,6 +78,18 @@ public class Application extends SpringBootServletInitializer {
                         + "ch.so.agi.ilivalidator.ext.RingSelfIntersectionIoxPlugin,"
                         + "ch.so.agi.ilivalidator.ext.TooFewPointsPolylineIoxPlugin");
     }
+    
+    @ConditionalOnProperty(name = "app.storageService", havingValue = "filesystem", matchIfMissing = false)
+    @Bean 
+    public StorageService filesystemStorageService() {
+         return new FilesystemStorageService();
+    }
+
+    @ConditionalOnProperty(name = "app.storageService", havingValue = "s3", matchIfMissing = false)
+    @Bean 
+    public StorageService s3StorageService() {
+         return new S3FakeStorageService();
+    }    
     
     // CommandLineRunner: Anwendung live aber nicht ready.
     @Bean

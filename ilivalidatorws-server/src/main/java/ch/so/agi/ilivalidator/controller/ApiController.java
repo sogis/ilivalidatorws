@@ -22,6 +22,7 @@ import ch.so.agi.ilivalidator.model.ValidationType;
 import ch.so.agi.ilivalidator.service.CsvValidatorService;
 import ch.so.agi.ilivalidator.service.FilesystemStorageService;
 import ch.so.agi.ilivalidator.service.IlivalidatorService;
+import ch.so.agi.ilivalidator.service.StorageService;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -55,8 +56,11 @@ public class ApiController {
     private static final String JOB_NOT_FOUND = "Job not found";
     private static final String JOB_DELETED = "Job successfully deleted";
     
-    @Autowired
-    private FilesystemStorageService fileStorageService;
+//    @Autowired
+//    private FilesystemStorageService fileStorageService;
+
+    //@Autowired
+    private StorageService storageService;
 
     @Autowired
     private JobScheduler jobScheduler;
@@ -70,6 +74,11 @@ public class ApiController {
     @Autowired
     private CsvValidatorService csvvalidatorService;
 
+    public ApiController(StorageService storageService) {
+        this.storageService = storageService;
+        log.debug("Storage service implementation: {}", storageService.getClass().getName());
+    }
+    
     
     @PostMapping(value="/api/jobs", consumes = {"multipart/form-data"})
     // @RequestPart anstelle von @RequestParam und @RequestBody damit swagger korrekt funktioniert.
@@ -81,7 +90,7 @@ public class ApiController {
         
         log.debug("<{}> Number of uploaded files: {}", jobId, files.length);
         
-        Path[] uploadedFiles = fileStorageService.store(files);
+        Path[] uploadedFiles = storageService.store(files);
 
         // Mit einem einfachen Ansatz wird versucht herauszufinden, welcher Validierungstyp verwendet werden muss.
         // D.h. welches Format vorliegt und geprüft werden soll.
