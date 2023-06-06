@@ -27,7 +27,7 @@ public class Utils {
     }
 
     /**
-     * Returns the log file's absolute path of the input file.
+     * Returns the log file's absolute path of the input files by using the first file's path.
      * @param inputFileName
      * @return The absolute file path.
      */

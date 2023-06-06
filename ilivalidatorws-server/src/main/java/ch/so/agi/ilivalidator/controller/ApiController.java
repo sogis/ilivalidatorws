@@ -95,11 +95,9 @@ public class ApiController {
         // Mit einem einfachen Ansatz wird versucht herauszufinden, welcher Validierungstyp verwendet werden muss.
         // D.h. welches Format vorliegt und geprüft werden soll.
         // Nach einem ersten Auffinden eines bekannten Filetypes wird aufgehört.
-        // Momentan gibt es nur INTERLIS. Denkbar z.B. CSV, Shapefile (iox-wkf halt).
         ValidationType validationType = null;
         for (Path path : uploadedFiles) {
             String fileName = path.toFile().toString().toLowerCase();
-            //log.debug("<{}> File name: {}", jobId, fileName);
             if (fileName.endsWith("xtf") || fileName.endsWith("xml") || fileName.endsWith("itf")) {
                 validationType = ValidationType.INTERLIS;
                 break;
