@@ -21,12 +21,18 @@ import org.springframework.util.FileSystemUtils;
 @Service
 public class CleanerService {
     private final Logger log = LoggerFactory.getLogger(this.getClass());
-    
+
+    private StorageService storageService;
+
     @Value("${app.workDirectory}")
     private String workDirectory;
     
     @Value("${app.folderPrefix}")
     private String folderPrefix;
+       
+    public CleanerService(StorageService storageService) {
+        this.storageService = storageService;
+    }
     
     /*
      * Verzeichnisse löschen, die älter als 60x60 Sekunden alt sind.
@@ -34,24 +40,28 @@ public class CleanerService {
     //@Scheduled(cron="0 0/2 * * * ?")
     @Scheduled(cron="0 * * * * *")
     private void cleanUp() {    
-        java.io.File[] tmpDirs = new java.io.File(workDirectory).listFiles();
-        if(tmpDirs!=null) {
-            for (java.io.File tmpDir : tmpDirs) {
-                if (tmpDir.getName().startsWith(folderPrefix)) {
-                    try {
-                        FileTime creationTime = (FileTime) Files.getAttribute(Paths.get(tmpDir.getAbsolutePath()), "creationTime");                    
-                        Instant now = Instant.now();
-                        
-                        long fileAge = now.getEpochSecond() - creationTime.toInstant().getEpochSecond();
-                        if (fileAge > 60*60) {
-                            log.info("deleting {}", tmpDir.getAbsolutePath());
-                            FileSystemUtils.deleteRecursively(tmpDir);
+        // TODO: Geht das eleganter?
+        // workDirectory ist der Bucket. Müsste anders gemacht werden.
+        if (storageService instanceof ch.so.agi.ilivalidator.service.LocalStorageService) {
+            java.io.File[] tmpDirs = new java.io.File(workDirectory).listFiles();
+            if(tmpDirs!=null) {
+                for (java.io.File tmpDir : tmpDirs) {
+                    if (tmpDir.getName().startsWith(folderPrefix)) {
+                        try {
+                            FileTime creationTime = (FileTime) Files.getAttribute(Paths.get(tmpDir.getAbsolutePath()), "creationTime");                    
+                            Instant now = Instant.now();
+                            
+                            long fileAge = now.getEpochSecond() - creationTime.toInstant().getEpochSecond();
+                            if (fileAge > 60*60) {
+                                log.info("deleting {}", tmpDir.getAbsolutePath());
+                                FileSystemUtils.deleteRecursively(tmpDir);
+                            }
+                        } catch (IOException e) {
+                            throw new IllegalStateException(e);
                         }
-                    } catch (IOException e) {
-                        throw new IllegalStateException(e);
                     }
                 }
-            }
-        }
+            }            
+        } 
     }
 }

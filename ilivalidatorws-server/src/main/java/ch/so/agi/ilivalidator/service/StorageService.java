@@ -8,9 +8,11 @@ import org.springframework.web.multipart.MultipartFile;
 public interface StorageService {
     void init();
 
-    Path[] store(MultipartFile[] files);
+    Path[] store(MultipartFile[] files, String jobId);
     
     Path store(MultipartFile file);
+    
+    Path store(Path localFile, Path targetPath);
     
     Path load(String filename);
 

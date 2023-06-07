@@ -90,11 +90,12 @@ app:
   docBase: ${DOC_BASE:/tmp/}
   configDirectoryName: ${CONFIG_DIRECTORY_NAME:config}
   unpackConfigFiles: ${UNPACK_CONFIG_FILES:true}
-  workDirectory: ${WORK_DIRECTORY:/tmp/}
+  workDirectory: ${WORK_DIRECTORY:/ch.so.agi.ilivalidator}
+  #workDirectory: ${WORK_DIRECTORY:/tmp/}
   folderPrefix: ${FOLDER_PREFIX:ilivalidatorws_}
   restApiEnabled: ${REST_API_ENABLED:true}
   cleanerEnabled: ${CLEANER_ENABLED:true}
-  storageService: ${STORAGE_SERVICE:filesystem}
-  #storageService: ${STORAGE_SERVICE:s3}
-  #awsAccessKey: ${AWS_ACCESS_KEY_ID}
-  #awsSecretKey: ${AWS_SECRET_ACCESS_KEY}
+  #storageService: ${STORAGE_SERVICE:local}
+  storageService: ${STORAGE_SERVICE:s3}
+  awsAccessKey: ${AWS_ACCESS_KEY_ID}
+  awsSecretKey: ${AWS_SECRET_ACCESS_KEY}

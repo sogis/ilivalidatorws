@@ -7,27 +7,23 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
-import ch.interlis.iox.IoxException;
 import ch.so.agi.ilivalidator.Utils;
 import ch.so.agi.ilivalidator.model.JobResponse;
 import ch.so.agi.ilivalidator.model.ValidationResult;
 import ch.so.agi.ilivalidator.model.ValidationType;
 import ch.so.agi.ilivalidator.service.CsvValidatorService;
-import ch.so.agi.ilivalidator.service.FilesystemStorageService;
 import ch.so.agi.ilivalidator.service.IlivalidatorService;
 import ch.so.agi.ilivalidator.service.StorageService;
 
 import java.io.IOException;
+import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
@@ -36,7 +32,6 @@ import java.util.UUID;
 
 import org.apache.commons.io.FilenameUtils;
 import org.jobrunr.jobs.Job;
-import org.jobrunr.jobs.states.JobState;
 import org.jobrunr.jobs.states.StateName;
 import org.jobrunr.scheduling.JobScheduler;
 import org.jobrunr.storage.JobNotFoundException;
@@ -56,10 +51,6 @@ public class ApiController {
     private static final String JOB_NOT_FOUND = "Job not found";
     private static final String JOB_DELETED = "Job successfully deleted";
     
-//    @Autowired
-//    private FilesystemStorageService fileStorageService;
-
-    //@Autowired
     private StorageService storageService;
 
     @Autowired
@@ -79,7 +70,6 @@ public class ApiController {
         log.debug("Storage service implementation: {}", storageService.getClass().getName());
     }
     
-    
     @PostMapping(value="/api/jobs", consumes = {"multipart/form-data"})
     // @RequestPart anstelle von @RequestParam und @RequestBody damit swagger korrekt funktioniert.
     // Sonst kann man zwar Dateien auswählen aber Swagger reklamiert im Browser, dass es Strings sein müssen.
@@ -90,14 +80,14 @@ public class ApiController {
         
         log.debug("<{}> Number of uploaded files: {}", jobId, files.length);
         
-        Path[] uploadedFiles = storageService.store(files);
+        Path[] uploadedFiles = storageService.store(files, jobId);
 
         // Mit einem einfachen Ansatz wird versucht herauszufinden, welcher Validierungstyp verwendet werden muss.
         // D.h. welches Format vorliegt und geprüft werden soll.
         // Nach einem ersten Auffinden eines bekannten Filetypes wird aufgehört.
         ValidationType validationType = null;
         for (Path path : uploadedFiles) {
-            String fileName = path.toFile().toString().toLowerCase();
+            String fileName = path.getFileName().toString().toLowerCase();            
             if (fileName.endsWith("xtf") || fileName.endsWith("xml") || fileName.endsWith("itf")) {
                 validationType = ValidationType.INTERLIS;
                 break;
@@ -115,49 +105,47 @@ public class ApiController {
                 throw new IllegalArgumentException("<"+jobId+"> Not supported data format.");
         }
         
-        String logFileName = Utils.getLogFileName(uploadedFiles); 
-        
-        List<String> dataFileNames = new ArrayList<>();
-        List<String> iliFileNames = new ArrayList<>();
-        List<String> configFileNames = new ArrayList<>();
+        List<Path> dataFiles = new ArrayList<>();
+        List<Path> iliFiles = new ArrayList<>();
+        List<Path> configFiles = new ArrayList<>();
 
         if (validationType == ValidationType.INTERLIS) {            
             for (Path path : uploadedFiles) {
-                String fileName = path.toFile().getAbsolutePath();
+                String fileName = path.getFileName().toString();
                 String fileExtension = FilenameUtils.getExtension(fileName).toLowerCase();
                 switch (fileExtension) {
-                    case "xtf" -> dataFileNames.add(fileName); 
-                    case "xml" -> dataFileNames.add(fileName); 
-                    case "itf" -> dataFileNames.add(fileName); 
-                    case "ili" -> iliFileNames.add(fileName);
-                    case "ini" -> configFileNames.add(fileName); // Wobei hier mehrere eigentlich keinen Sinn ergibt.
+                    case "xtf" -> dataFiles.add(path); 
+                    case "xml" -> dataFiles.add(path); 
+                    case "itf" -> dataFiles.add(path); 
+                    case "ili" -> iliFiles.add(path);
+                    case "ini" -> configFiles.add(path); // Wobei hier mehrere eigentlich keinen Sinn ergibt.
                 }
             }
             
-            log.debug("<{}> Number of uploaded transfer files: {}", jobId, dataFileNames.size());
-            log.debug("<{}> Number of uploaded ili files: {}", jobId, iliFileNames.size());
-            log.debug("<{}> Number of uploaded config files: {}", jobId, configFileNames.size());
-            
-            jobScheduler.enqueue(jobIdUuid, () -> ilivalidatorService.validate(dataFileNames.toArray(new String[0]), logFileName, iliFileNames.toArray(new String[0]), configFileNames.toArray(new String[0])));
+            log.debug("<{}> Number of uploaded transfer files: {}", jobId, dataFiles.size());
+            log.debug("<{}> Number of uploaded ili files: {}", jobId, iliFiles.size());
+            log.debug("<{}> Number of uploaded config files: {}", jobId, configFiles.size());
+                        
+            jobScheduler.enqueue(jobIdUuid, () -> ilivalidatorService.validate(dataFiles.toArray(new Path[0]), iliFiles.toArray(new Path[0]), configFiles.toArray(new Path[0])));
             log.debug("<{}> Job is being queued", jobId);
         } else if (validationType == ValidationType.CSV) {
             for (Path path : uploadedFiles) {
-                log.debug("<{}> File name: {}", jobId, path.toFile().getName());
+                log.debug("<{}> File name: {}", jobId, path.toAbsolutePath().toString());
 
-                String fileName = path.toFile().getAbsolutePath();
+                String fileName = path.getFileName().toString();
                 String fileExtension = FilenameUtils.getExtension(fileName).toLowerCase();
                 switch (fileExtension) {
-                    case "csv" -> dataFileNames.add(fileName); 
-                    case "ili" -> iliFileNames.add(fileName);
-                    case "ini" -> configFileNames.add(fileName);
+                    case "csv" -> dataFiles.add(path); 
+                    case "ili" -> iliFiles.add(path);
+                    case "ini" -> configFiles.add(path);
                 }                
             }
             
-            log.debug("<{}> Number of uploaded csv files: {}", jobId, dataFileNames.size());
-            log.debug("<{}> Number of uploaded ili files: {}", jobId, iliFileNames.size());
-            log.debug("<{}> Number of uploaded config files: {}", jobId, configFileNames.size());
+            log.debug("<{}> Number of uploaded csv files: {}", jobId, dataFiles.size());
+            log.debug("<{}> Number of uploaded ili files: {}", jobId, iliFiles.size());
+            log.debug("<{}> Number of uploaded config files: {}", jobId, configFiles.size());
 
-            jobScheduler.enqueue(jobIdUuid, () -> csvvalidatorService.validate(dataFileNames.toArray(new String[0]), logFileName, iliFileNames.toArray(new String[0]), configFileNames.toArray(new String[0])));
+            jobScheduler.enqueue(jobIdUuid, () -> csvvalidatorService.validate(dataFiles.toArray(new Path[0]), iliFiles.toArray(new Path[0]), configFiles.toArray(new Path[0])));
             log.debug("<{}> Job is being queued", jobId);
         }
 
@@ -196,21 +184,21 @@ public class ApiController {
     }
     
     @GetMapping("/api/jobs/{jobId}")
-    public ResponseEntity<?> getJobById(@PathVariable String jobId) {
+    public ResponseEntity<?> getJobById(@PathVariable String jobId) throws IOException {
         try {
             Job job = storageProvider.getJobById(UUID.fromString(jobId));        
-            String logFileName = job.getJobDetails().getJobParameters().get(1).getObject().toString();  
+            
+            Path logFile = storageService.load(jobId + "/" + jobId + ".log");
 
             String logFileLocation = null;
             String xtfLogFileLocation = null;
             String validationResult = null;
             if (job.getJobState().getName().equals(StateName.SUCCEEDED)) {
-                logFileLocation = Utils.fixUrl(getHost() + "/" + LOG_ENDPOINT + "/" + Utils.getLogFileUrlPathElement(logFileName));
+                logFileLocation = Utils.fixUrl(getHost() + "/" + LOG_ENDPOINT + "/" + jobId + "/" + jobId + ".log");
                 xtfLogFileLocation = logFileLocation + ".xtf"; 
-                
                 try {
                     // JobResult nur bei Pro-Version. Darum handgestrickt.
-                    String content = Files.readString(Paths.get(logFileName));
+                    String content = Files.readString(logFile);
                     if (content.contains("...validation done")) {
                         validationResult = ValidationResult.SUCCEEDED.toString();
                     } else if (content.contains("...validation failed")) {

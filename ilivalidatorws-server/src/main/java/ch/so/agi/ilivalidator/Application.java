@@ -30,17 +30,17 @@ import org.springframework.core.io.support.ResourcePatternResolver;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.web.filter.ForwardedHeaderFilter;
 
-import ch.so.agi.ilivalidator.service.FilesystemStorageService;
-import ch.so.agi.ilivalidator.service.S3FakeStorageService;
+import ch.so.agi.ilivalidator.service.LocalStorageService;
+import ch.so.agi.ilivalidator.service.S3StorageService;
 import ch.so.agi.ilivalidator.service.StorageService;
 
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-//import static org.carlspring.cloud.storage.s3fs.S3Factory.ACCESS_KEY;
-//import static org.carlspring.cloud.storage.s3fs.S3Factory.SECRET_KEY;
-//import static org.carlspring.cloud.storage.s3fs.S3Factory.REGION;
+import static org.carlspring.cloud.storage.s3fs.S3Factory.ACCESS_KEY;
+import static org.carlspring.cloud.storage.s3fs.S3Factory.SECRET_KEY;
+import static org.carlspring.cloud.storage.s3fs.S3Factory.REGION;
 
 @SpringBootApplication
 @ServletComponentScan
@@ -64,11 +64,11 @@ public class Application extends SpringBootServletInitializer {
     @Value("${app.unpackConfigFiles}")
     private boolean unpackConfigFiles;
 
-//    @Value("${app.awsAccessKey}")
-//    private String accessKey;
-//
-//    @Value("${app.awsSecretKey}")
-//    private String secretKey;
+    @Value("${app.awsAccessKey}")
+    private String accessKey;
+
+    @Value("${app.awsSecretKey}")
+    private String secretKey;
 
     public static void main(String[] args) {
         SpringApplication.run(Application.class, args);
@@ -96,33 +96,31 @@ public class Application extends SpringBootServletInitializer {
                         + "ch.so.agi.ilivalidator.ext.TooFewPointsPolylineIoxPlugin");
     }
     
-    @ConditionalOnProperty(name = "app.storageService", havingValue = "filesystem", matchIfMissing = false)
+    @ConditionalOnProperty(name = "app.storageService", havingValue = "local", matchIfMissing = false)
     @Bean 
     public StorageService filesystemStorageService() {
-         return new FilesystemStorageService();
+         return new LocalStorageService();
     }
 
-//    @ConditionalOnProperty(name = "app.storageService", havingValue = "s3", matchIfMissing = false)
-//    @Bean 
-//    public StorageService s3StorageService() throws IOException {
-//         return new S3FakeStorageService(s3FileSystem());
-//    }    
-//    
-//    @ConditionalOnProperty(name = "app.storageService", havingValue = "s3", matchIfMissing = false)
-//    @Bean
-//    public FileSystem s3FileSystem() throws IOException {
-//        Map<String, String> env = new HashMap<>();
-//        env.put(ACCESS_KEY, accessKey);
-//        env.put(SECRET_KEY, secretKey);
-//        env.put(REGION, "eu-central-1");
-//
-//        FileSystem fileSystem = FileSystems.newFileSystem(URI.create("s3://s3-eu-central-1.amazonaws.com/"), env, Thread.currentThread().getContextClassLoader());
-//                
-//        return fileSystem;
-//    }
+    @ConditionalOnProperty(name = "app.storageService", havingValue = "s3", matchIfMissing = false)
+    @Bean 
+    public StorageService s3StorageService() throws IOException {
+         return new S3StorageService(s3FileSystem());
+    }    
+    
+    @ConditionalOnProperty(name = "app.storageService", havingValue = "s3", matchIfMissing = false)
+    @Bean
+    public FileSystem s3FileSystem() throws IOException {
+        Map<String, String> env = new HashMap<>();
+        env.put(ACCESS_KEY, accessKey);
+        env.put(SECRET_KEY, secretKey);
+        env.put(REGION, "eu-central-1");
 
-    
-    
+        FileSystem fileSystem = FileSystems.newFileSystem(URI.create("s3://s3-eu-central-1.amazonaws.com/"), env, Thread.currentThread().getContextClassLoader());
+                
+        return fileSystem;
+    }
+
     // CommandLineRunner: Anwendung live aber nicht ready.
     @Bean
     CommandLineRunner init() {

@@ -2,12 +2,17 @@ package ch.so.agi.ilivalidator.service;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.FileSystem;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -31,28 +36,86 @@ public class IlivalidatorService {
     private static final String ILI_SUBDIRECTORY = "ili";
     private static final String INI_SUBDIRECTORY = "ini";
 
+    private StorageService storageService;
+
     @Value("${app.docBase}")
     private String docBase;
 
     @Value("${app.configDirectoryName}")
     private String configDirectoryName;
     
+    @Value("${app.workDirectory}")
+    private String workDirectory;
+
+    @Value("${app.folderPrefix}")
+    private String folderPrefix;
+    
+    public IlivalidatorService(StorageService storageService) {
+        this.storageService = storageService;
+    }
+    
     /**
      * This method validates an INTERLIS transfer file with
      * <a href="https://github.com/claeis/ilivalidator">ilivalidator library</a>.
      * 
-     * @param transferFileNames
-     * @param logFileName
-     * @param modelFileNames
-     * @param configFileNames
+     * @param transferFiles
+     * @param modelFiles
+     * @param configFiles
      * @throws IoxException   If an error occurred when trying to figure out model
      *                        name.
      * @throws IOException    If config file cannot be read or copied to file system.
      * @return boolean        True, if transfer file is valid. False, if errors were found.
      */
     @Job(name = "Ilivalidator", retries=0)
-    public synchronized boolean validate(String[] transferFileNames, String logFileName, String[] modelFileNames,
-            String[] configFileNames) throws IoxException, IOException {
+    public synchronized boolean validate(Path[] transferFiles, Path[] modelFiles,
+            Path[] configFiles) throws IoxException, IOException {
+        
+        // Wenn wir nicht das "local"-Filesystem verwenden, müssen die Daten zuerst lokal
+        // verfügbar gemacht werden, weil ilivalidator nur mit "File" und nicht mit "Path" umgehen kann.
+        Path tmpDirectory = Files.createTempDirectory(Paths.get(System.getProperty("java.io.tmpdir")), folderPrefix);            
+        List<String> transferFileNames = new ArrayList<>();
+        List<String> modelFileNames = new ArrayList<>();
+        List<String> configFileNames = new ArrayList<>();
+        Path logFile;
+        String logFileName;
+        Path parentDirectory = null; // Wird beim "Hochladen"/Speichern des lokalen Logfiles gebraucht.
+        if (storageService instanceof ch.so.agi.ilivalidator.service.LocalStorageService) {
+            for (Path transferFile : transferFiles) {
+                if (parentDirectory == null) {
+                    parentDirectory = transferFile.getParent().getFileName();
+                }
+                transferFileNames.add(transferFile.toFile().getAbsolutePath());
+            }
+            for (Path modelFile : modelFiles) {
+                modelFileNames.add(modelFile.toFile().getAbsolutePath());
+            }
+            for (Path configFile : configFiles) {
+                configFileNames.add(configFile.toFile().getAbsolutePath());
+            }
+
+        } else {
+            for (Path transferFile : transferFiles) {
+                if (parentDirectory == null) {
+                    parentDirectory = transferFile.getParent().getFileName();
+                }
+                Path localCopy = tmpDirectory.resolve(Paths.get(transferFile.getFileName().toString()));
+                Files.copy(transferFile, localCopy, StandardCopyOption.REPLACE_EXISTING);
+                transferFileNames.add(localCopy.toFile().getAbsolutePath());
+            }
+            for (Path modelFile : modelFiles) {
+                Path localCopy = tmpDirectory.resolve(Paths.get(modelFile.getFileName().toString()));
+                Files.copy(modelFile, localCopy, StandardCopyOption.REPLACE_EXISTING);
+                modelFileNames.add(localCopy.toFile().getAbsolutePath());
+            }
+            for (Path configFile : configFiles) {
+                Path localCopy = tmpDirectory.resolve(Paths.get(configFile.getFileName().toString()));
+                Files.copy(configFile, localCopy, StandardCopyOption.REPLACE_EXISTING);
+                configFileNames.add(localCopy.toFile().getAbsolutePath());
+            }
+        }
+        logFile = Paths.get(new File(transferFileNames.get(0)).getParent(), parentDirectory.toString() + ".log");
+        logFileName = logFile.toFile().getAbsolutePath();                
+
         Settings settings = new Settings();
         settings.setValue(Validator.SETTING_LOGFILE, logFileName);
         settings.setValue(Validator.SETTING_XTFLOG, logFileName + ".xtf");
@@ -85,8 +148,8 @@ public class IlivalidatorService {
         // ist es nicht mehr ganz eindeutig.
         // Es werden alle Modellnamen aus den XTF-Dateien eruiert und dann wird der
         // erste Config-Datei-Match verwendet.
-        if (configFileNames.length > 0) {
-            settings.setValue(Validator.SETTING_CONFIGFILE, configFileNames[0]);
+        if (configFileNames.size() > 0) {
+            settings.setValue(Validator.SETTING_CONFIGFILE, configFileNames.get(0));
             // Option muss explizit auf NULL gesetzt werden, dann macht ilivalidator nichts
             // resp. es wird der Wert aus der ini-Datei verwendet.
             // Siehe Quellcode ilivalidator.
@@ -94,7 +157,7 @@ public class IlivalidatorService {
             // kann nicht --allObjectsAccessible verwenden und mit einem config-File
             // überschreiben.
             settings.setValue(Validator.SETTING_ALL_OBJECTS_ACCESSIBLE, null);
-            log.debug("Uploaded config file used: {}", configFileNames[0]);
+            log.debug("Uploaded config file used: {}", configFileNames.get(0));
         } else {
             for (String transferFileName : transferFileNames) {
                 String modelName = getModelNameFromTransferFile(transferFileName);
@@ -108,9 +171,29 @@ public class IlivalidatorService {
         }
         
         log.info("Validation start");
-        boolean valid = Validator.runValidation(transferFileNames, settings);
+        boolean valid = Validator.runValidation(transferFileNames.toArray(new String[0]), settings);
         log.info("Validation end");
 
+        // Die lokalen Dateien löschen und das Logfile hochladen.
+        if (!(storageService instanceof ch.so.agi.ilivalidator.service.LocalStorageService)) {
+            for (String transferFileName : transferFileNames) {
+                Files.delete(Paths.get(transferFileName));
+            }
+            {
+                // Auch wenn ich ilivalidator ohne Jobrunr aufrufe (und somit der Path ein S3Path ist), 
+                // funktioniert das Kopieren nicht:
+                // java.lang.NullPointerException: Cannot invoke "org.carlspring.cloud.storage.s3fs.S3FileStore.name()" because the return value of "org.carlspring.cloud.storage.s3fs.S3Path.getFileStore()" is null
+                
+                storageService.store(logFile, Paths.get(parentDirectory.toString(), logFile.getFileName().toString()));
+                Files.delete(logFile);
+            }
+            for (String modelFileName : modelFileNames) {
+                Files.delete(Paths.get(modelFileName));
+            }
+            for (String configFileName : configFileNames) {
+                Files.delete(Paths.get(configFileName));
+            }
+        }
         return valid;
     }
 
