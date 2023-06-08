@@ -7,6 +7,7 @@ The ilivalidator web service is a [Spring Boot](https://projects.spring.io/sprin
 ## Beschreibung
 
 * checks INTERLIS 1+2 transfer files: see [https://github.com/claeis/ilivalidator](https://github.com/claeis/ilivalidator) for all the INTERLIS validation magic of ilivalidator
+* checks CSV files
 * uses server saved config files for validation tailoring
 * user can deploy and/or upload own config files for validation tailoring
 * user can upload multiple transfer files at once
@@ -72,7 +73,7 @@ Die allermeisten Optionen sind via Umgebungsvariablen exponiert und somit verän
 | `DOC_BASE` | Verzeichnis auf dem Filesystem, das als Root-Verzeichnis für das Directory-Listing des Webservers dient. Das Root-Verzeichnis selber ist nicht sichtbar. | `/tmp/` |
 | `CONFIG_DIRECTORY_NAME` | Unterverzeichnis im `DOC_BASE`-Verzeichnis, welches die _ini_- und _ili_-Verzeichnisse enthält. Dieses Verzeichnis ist unter http://localhost:8080/config erreichbar. Es muss nicht manuell erstellt werden. Es wird beim Starten der Anwendung erstellt. Das Verzeichnis muss bei einem Betrieb mit mehreren Containern geteilt werden, falls zusätzliche _ini_- und _ili_-Dateien in die entsprechenden Verzeichnisse kopiert werden. | `config` |
 | `UNPACK_CONFIG_FILES` | In der Anwendung enthaltene _ini_- und _ili_-Dateien werden bei jedem Start der Anwendung in die entsprechenden Verzeichnisse kopiert. | `true` |
-| `STORAGE_SERVICE` | **NOCH NICHT IMPLEMENTIERT** Wahl der Persistenz-Implementierung der hochgeladenen Dateien und daraus resultierenden Logfiles: `local`, `s3`. | `local` |
+| `STORAGE_SERVICE` | Speicherort, der hochgeladenen Dateien und der Logfiles: `local`, `s3`. | `local` |
 | `WORK_DIRECTORY` | Verzeichnis, in das die zu prüfenden INTERLIS-Transferdatei und die Logdateien kopiert werden (in ein temporäres Unterverzeichnis, das im `WORK_DIRECTORY` erstellt wird). Falls `local` Storage Service gewählt ist, muss das Verzeichnis, bei einem Betrieb mit mehreren Containern, zwingend geteilt werden muss. Sonst ist nicht sichergestellt, dass man die Logdatei(en) herunterladen kann. Falls `s3` Storage Service gewählt ist, muss der Name des Buckets gewählt werden, in den die Daten kopiert werden. | `/tmp/` |
 | `FOLDER_PREFIX` | Für jede zu prüfende Datei wird im `WORK_DIRECTORY`-Verzeichnis ein temporäres Verzeichnis erstellt. Der Prefix wird dem Namen des temporären Verzeichnisses vorangestellt. | `ilivalidatorws_` |
 | `CLEANER_ENABLED` | Dient zum Ein- und Ausschalten des Aufräumprozesses, der alte, geprüfte Dateien (INTERLIS-Transferdateien, Logfiles) löscht. | `true` |
@@ -88,7 +89,7 @@ Die allermeisten Optionen sind via Umgebungsvariablen exponiert und somit verän
 | `TOMCAT_ACCEPT_COUNT` | Maximale Grösser der Queue, falls keine Threads mehr verfügbar. | `100` |
 | `TOMCAT_MAX_CONNECTIONS` | Maximale Threads des Servers. | `500` |
 | `HIKARI_MAX_POOL_SIZE` | Grösse des DB-Connections-Pools | `10` |
-| `AWS_ACCESS_KEY_ID` | AWS Access Key. |  |
+| `AWS_ACCESS_KEY_ID` | AWS Access Key |  |
 | `AWS_SECRET_ACCESS_KEY` | AWS Secret Key |  |
 
 Ein `docker-run`-Befehl könnte circa so aussehen:
@@ -225,10 +226,3 @@ docker build -t sogis/ilivalidator-web-service:latest -f Dockerfile.jvm .
 ./mvnw test -Dtest=SpringApiTests#validation_Ok_Interlis2Files -DfailIfNoTests=false
 ```
 
-
-## Ideen
-
-- CSV-Checker implementieren
-- im result json auch link to zu toml etc.
-- API:
-  * DELETE (https://cloud.ibm.com/docs/api-handbook?topic=api-handbook-long-running-operations&locale=de)

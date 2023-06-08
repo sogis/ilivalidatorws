@@ -78,11 +78,11 @@ public class IlivalidatorService {
         List<String> configFileNames = new ArrayList<>();
         Path logFile;
         String logFileName;
-        Path parentDirectory = null; // Wird beim "Hochladen"/Speichern des lokalen Logfiles gebraucht.
-        if (storageService instanceof ch.so.agi.ilivalidator.service.LocalStorageService) {
+        Path jobDirectoryPath = null; // Original-Jobdirectory-Pfad. Entspricht der Job-Id. Wird beim "Hochladen"/Speichern des lokalen Logfiles gebraucht.
+        if (storageService instanceof LocalStorageService) {
             for (Path transferFile : transferFiles) {
-                if (parentDirectory == null) {
-                    parentDirectory = transferFile.getParent().getFileName();
+                if (jobDirectoryPath == null) {
+                    jobDirectoryPath = transferFile.getParent().getFileName();
                 }
                 transferFileNames.add(transferFile.toFile().getAbsolutePath());
             }
@@ -95,25 +95,22 @@ public class IlivalidatorService {
 
         } else {
             for (Path transferFile : transferFiles) {
-                if (parentDirectory == null) {
-                    parentDirectory = transferFile.getParent().getFileName();
+                if (jobDirectoryPath == null) {
+                    jobDirectoryPath = transferFile.getParent().getFileName();
                 }
-                Path localCopy = tmpDirectory.resolve(Paths.get(transferFile.getFileName().toString()));
-                Files.copy(transferFile, localCopy, StandardCopyOption.REPLACE_EXISTING);
+                Path localCopy = storageService.load(transferFile, tmpDirectory);
                 transferFileNames.add(localCopy.toFile().getAbsolutePath());
             }
             for (Path modelFile : modelFiles) {
-                Path localCopy = tmpDirectory.resolve(Paths.get(modelFile.getFileName().toString()));
-                Files.copy(modelFile, localCopy, StandardCopyOption.REPLACE_EXISTING);
+                Path localCopy = storageService.load(modelFile, tmpDirectory);
                 modelFileNames.add(localCopy.toFile().getAbsolutePath());
             }
             for (Path configFile : configFiles) {
-                Path localCopy = tmpDirectory.resolve(Paths.get(configFile.getFileName().toString()));
-                Files.copy(configFile, localCopy, StandardCopyOption.REPLACE_EXISTING);
+                Path localCopy = storageService.load(configFile, tmpDirectory);
                 configFileNames.add(localCopy.toFile().getAbsolutePath());
             }
         }
-        logFile = Paths.get(new File(transferFileNames.get(0)).getParent(), parentDirectory.toString() + ".log");
+        logFile = Paths.get(new File(transferFileNames.get(0)).getParent(), jobDirectoryPath.toString() + ".log");
         logFileName = logFile.toFile().getAbsolutePath();                
 
         Settings settings = new Settings();
@@ -175,7 +172,7 @@ public class IlivalidatorService {
         log.info("Validation end");
 
         // Die lokalen Dateien löschen und das Logfile hochladen.
-        if (!(storageService instanceof ch.so.agi.ilivalidator.service.LocalStorageService)) {
+        if (!(storageService instanceof LocalStorageService)) {
             for (String transferFileName : transferFileNames) {
                 Files.delete(Paths.get(transferFileName));
             }
@@ -184,7 +181,7 @@ public class IlivalidatorService {
                 // funktioniert das Kopieren nicht:
                 // java.lang.NullPointerException: Cannot invoke "org.carlspring.cloud.storage.s3fs.S3FileStore.name()" because the return value of "org.carlspring.cloud.storage.s3fs.S3Path.getFileStore()" is null
                 
-                storageService.store(logFile, Paths.get(parentDirectory.toString(), logFile.getFileName().toString()));
+                storageService.store(logFile, Paths.get(jobDirectoryPath.toString(), logFile.getFileName().toString()));
                 Files.delete(logFile);
             }
             for (String modelFileName : modelFileNames) {

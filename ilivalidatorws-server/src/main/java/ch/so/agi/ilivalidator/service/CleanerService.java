@@ -42,7 +42,7 @@ public class CleanerService {
     private void cleanUp() {    
         // TODO: Geht das eleganter?
         // workDirectory ist der Bucket. Müsste anders gemacht werden.
-        if (storageService instanceof ch.so.agi.ilivalidator.service.LocalStorageService) {
+        if (storageService instanceof LocalStorageService) {
             java.io.File[] tmpDirs = new java.io.File(workDirectory).listFiles();
             if(tmpDirs!=null) {
                 for (java.io.File tmpDir : tmpDirs) {

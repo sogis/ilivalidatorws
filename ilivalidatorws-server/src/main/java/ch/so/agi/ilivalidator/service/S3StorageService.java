@@ -75,14 +75,12 @@ public class S3StorageService implements StorageService {
         return paths.toArray(new Path[0]);
     }
 
+    /**
+     * @param localFile local file
+     * @param targetPath Target path where the file will be written. Relative to the work directory.
+     */
     @Override
-    public Path store(MultipartFile file) {
-        // TODO Auto-generated method stub
-        return null;
-    }
-    
-    @Override
-    public Path store(Path localFile, Path targetPath) {
+    public void store(Path localFile, Path targetPath) {
         Path workDirectoryPath = s3fs.getPath(workDirectory);
         targetPath = workDirectoryPath.resolve(targetPath.toString());
         try {
@@ -90,20 +88,28 @@ public class S3StorageService implements StorageService {
         } catch (IOException e) {
             throw new FileStorageException(e.getMessage());
         }
-        return targetPath;
+    }
+    
+    @Override
+    public Path load(Path targetPath, Path localDirectory) {
+        Path localCopy = localDirectory.resolve(Paths.get(targetPath.getFileName().toString()));
+        try {
+            Files.copy(targetPath, localCopy, StandardCopyOption.REPLACE_EXISTING);
+        } catch (IOException e) {
+            throw new FileStorageException(e.getMessage());
+        }
+        return localCopy;
     }
 
     @Override
-    public Path load(String filename) {
+    public Path load(String filePath) {
         Path workDirectoryPath = s3fs.getPath(workDirectory);
-        Path path = workDirectoryPath.resolve(filename);
+        Path path = workDirectoryPath.resolve(filePath);
         return path;
     }
 
     @Override
     public void delete(String filename) {
         // TODO Auto-generated method stub
-
     }
-
 }

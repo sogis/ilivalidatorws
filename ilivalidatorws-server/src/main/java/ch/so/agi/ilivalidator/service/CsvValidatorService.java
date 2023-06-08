@@ -55,11 +55,11 @@ public class CsvValidatorService {
         List<String> configFileNames = new ArrayList<>();
         Path logFile;
         String logFileName;
-        Path parentDirectory = null; // Wird beim "Hochladen"/Speichern des lokalen Logfiles gebraucht.
-        if (storageService instanceof ch.so.agi.ilivalidator.service.LocalStorageService) {
+        Path jobDirectoryPath = null; 
+        if (storageService instanceof LocalStorageService) {
             for (Path csvFile : csvFiles) {
-                if (parentDirectory == null) {
-                    parentDirectory = csvFile.getParent().getFileName();
+                if (jobDirectoryPath == null) {
+                    jobDirectoryPath = csvFile.getParent().getFileName();
                 }
                 csvFileNames.add(csvFile.toFile().getAbsolutePath());
             }
@@ -72,25 +72,22 @@ public class CsvValidatorService {
 
         } else {
             for (Path csvFile : csvFiles) {
-                if (parentDirectory == null) {
-                    parentDirectory = csvFile.getParent().getFileName();
+                if (jobDirectoryPath == null) {
+                    jobDirectoryPath = csvFile.getParent().getFileName();
                 }
-                Path localCopy = tmpDirectory.resolve(Paths.get(csvFile.getFileName().toString()));
-                Files.copy(csvFile, localCopy, StandardCopyOption.REPLACE_EXISTING);
+                Path localCopy = storageService.load(csvFile, tmpDirectory);
                 csvFileNames.add(localCopy.toFile().getAbsolutePath());
             }
             for (Path modelFile : modelFiles) {
-                Path localCopy = tmpDirectory.resolve(Paths.get(modelFile.getFileName().toString()));
-                Files.copy(modelFile, localCopy, StandardCopyOption.REPLACE_EXISTING);
+                Path localCopy = storageService.load(modelFile, tmpDirectory);
                 modelFileNames.add(localCopy.toFile().getAbsolutePath());
             }
             for (Path configFile : configFiles) {
-                Path localCopy = tmpDirectory.resolve(Paths.get(configFile.getFileName().toString()));
-                Files.copy(configFile, localCopy, StandardCopyOption.REPLACE_EXISTING);
+                Path localCopy = storageService.load(configFile, tmpDirectory);
                 configFileNames.add(localCopy.toFile().getAbsolutePath());
             }
         }
-        logFile = Paths.get(new File(csvFileNames.get(0)).getParent(), parentDirectory.toString() + ".log");
+        logFile = Paths.get(new File(csvFileNames.get(0)).getParent(), jobDirectoryPath.toString() + ".log");
         logFileName = logFile.toFile().getAbsolutePath();                
     
         Settings settings = new Settings();
@@ -132,12 +129,12 @@ public class CsvValidatorService {
         boolean validationOk = new CsvValidatorImpl().validate(csvFileNames.toArray(new String[0]), settings);
         
         // Die lokalen Dateien löschen und das Logfile hochladen.
-        if (!(storageService instanceof ch.so.agi.ilivalidator.service.LocalStorageService)) {
+        if (!(storageService instanceof LocalStorageService)) {
             for (String csvFileName : csvFileNames) {
                 Files.delete(Paths.get(csvFileName));
             }
             {
-                storageService.store(logFile, Paths.get(parentDirectory.toString(), logFile.getFileName().toString()));
+                storageService.store(logFile, Paths.get(jobDirectoryPath.toString(), logFile.getFileName().toString()));
                 Files.delete(logFile);
             }
             for (String modelFileName : modelFileNames) {

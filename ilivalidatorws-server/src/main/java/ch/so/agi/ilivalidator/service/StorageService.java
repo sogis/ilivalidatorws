@@ -9,11 +9,11 @@ public interface StorageService {
     void init();
 
     Path[] store(MultipartFile[] files, String jobId);
+        
+    void store(Path localFile, Path targetPath);
     
-    Path store(MultipartFile file);
-    
-    Path store(Path localFile, Path targetPath);
-    
+    Path load(Path targetPath, Path localDirectory);
+
     Path load(String filename);
 
     void delete(String filename);
