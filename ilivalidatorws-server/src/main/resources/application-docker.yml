@@ -95,8 +95,8 @@ app:
   restApiEnabled: ${REST_API_ENABLED:true}
   cleanerEnabled: ${CLEANER_ENABLED:true}
   storageService: ${STORAGE_SERVICE:local}
-  awsAccessKey: ${AWS_ACCESS_KEY_ID:foo}
-  awsSecretKey: ${AWS_SECRET_ACCESS_KEY:bar}
+  awsAccessKey: ${AWS_ACCESS_KEY_ID}
+  awsSecretKey: ${AWS_SECRET_ACCESS_KEY}
 
 
   

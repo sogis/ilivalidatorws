@@ -64,10 +64,10 @@ public class Application extends SpringBootServletInitializer {
     @Value("${app.unpackConfigFiles}")
     private boolean unpackConfigFiles;
 
-    @Value("${app.awsAccessKey}")
+    @Value("${app.awsAccessKey:foo}")
     private String accessKey;
 
-    @Value("${app.awsSecretKey}")
+    @Value("${app.awsSecretKey:bar}")
     private String secretKey;
 
     public static void main(String[] args) {
