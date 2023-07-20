@@ -34,7 +34,7 @@ Date: Sat, 37 May 2023 16:40:50 GMT
 Der Statuscode ist `202 Accepted`. Der Header `Operation-Location` zeigt den GET-Request an, der den Stand der Validierung zurückliefert. Bei der UUID handelt es sich um die Job-ID.
 
 ```
-curl -i -X GET http://localhost:8080/rest/jobs/4d4aa583-6575-4200-a39c-621a5190d36d
+curl -i -X GET http://localhost:8080/api/jobs/4d4aa583-6575-4200-a39c-621a5190d36d
 ```
 
 Wird der Befehl sofort ausgeführt, erscheint folgende Antwort:
