@@ -168,7 +168,8 @@ Keine.
 
 ## Konfiguration und Betrieb in der GDI
 
-TODO: Link zum openshift-template und zur api-gateway config.
+- https://github.com/sogis/openshift-templates/path/to/directory
+- https://github.com/sogis/openshift-templates/blob/master/api-gateway/resources.yaml
 
 ## Interne Struktur
 
