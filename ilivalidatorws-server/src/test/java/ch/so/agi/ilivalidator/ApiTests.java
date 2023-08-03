@@ -231,7 +231,8 @@ public abstract class ApiTests {
 
         MultiValueMap<String, Object> parameters = new LinkedMultiValueMap<String, Object>();
         parameters.add("files", new FileSystemResource("src/test/data/2457_Messen_vorher.xtf"));
-
+        parameters.add("theme", "nutzungsplanung");
+        
         HttpHeaders headers = new HttpHeaders();
         headers.set("Content-Type", "multipart/form-data");
         headers.set("Accept", "text/plain");
@@ -264,7 +265,7 @@ public abstract class ApiTests {
             BufferedReader reader = new BufferedReader(new InputStreamReader(in));
             logFileContents = reader.lines().collect(Collectors.joining(System.lineSeparator()));
         }
-        assertTrue(logFileContents.contains("so_nutzungsplanung_20171118.ini"));
+        assertTrue(logFileContents.contains("nutzungsplanung.ini"));
         assertTrue(logFileContents.contains("Warning: line 5: SO_Nutzungsplanung_20171118.Rechtsvorschriften.Dokument: tid d3c20374-f6c5-48f9-8e1e-232b87a9d80a: invalid format of INTERLIS.URI value <34-Messen/Entscheide/34-36_45-E.pdf> in attribute TextImWeb"));
         assertTrue(logFileContents.contains("Error: line 61: SO_Nutzungsplanung_20171118.Rechtsvorschriften.HinweisWeitereDokumente: tid 6: Association SO_Nutzungsplanung_20171118.Rechtsvorschriften.HinweisWeitereDokumente must not have an OID (6)"));
         assertTrue(logFileContents.contains("Error: line 412: SO_Nutzungsplanung_20171118.Nutzungsplanung.Grundnutzung: tid 2d285daf-a5ab-4106-a453-58eef2e921ab: duplicate coord at (2599932.281, 1216063.38, NaN)"));

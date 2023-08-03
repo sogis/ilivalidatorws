@@ -31,6 +31,7 @@ import elemental2.dom.HTMLFormElement;
 import elemental2.dom.HTMLInputElement;
 import elemental2.dom.Location;
 import elemental2.dom.RequestInit;
+import elemental2.dom.URL;
 import elemental2.dom.XMLHttpRequest;
 import elemental2.promise.Promise;
 import jsinterop.base.JsPropertyMap;
@@ -67,6 +68,7 @@ public class App implements EntryPoint {
     
     public void init() {                                
         // Get url from browser (client) to find out the correct location of resources.
+        // And read the theme from query params.
         Location location = DomGlobal.window.location;
 
         // Get document element which will be used to create other elements.
@@ -135,6 +137,12 @@ public class App implements EntryPoint {
                 button.disabled = true;
                 
                 FormData formData = new FormData();
+                
+                URL url = new URL(DomGlobal.window.location.href);
+                String theme = url.searchParams.get("t");
+                if (theme != null) {
+                    formData.append("theme", theme);
+                }
 
                 List<String> fileNames = new ArrayList<>();
                 int filesSize = 0;

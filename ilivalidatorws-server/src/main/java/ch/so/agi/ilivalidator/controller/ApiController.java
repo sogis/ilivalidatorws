@@ -72,10 +72,20 @@ public class ApiController {
     @PostMapping(value="/api/jobs", consumes = {"multipart/form-data"})
     // @RequestPart anstelle von @RequestParam und @RequestBody damit swagger korrekt funktioniert.
     // Sonst kann man zwar Dateien auswählen aber Swagger reklamiert im Browser, dass es Strings sein müssen.
-    public ResponseEntity<?> uploadFiles(@RequestPart(name="files", required=true) MultipartFile[] files) {
+    public ResponseEntity<?> uploadFiles(@RequestPart(name="files", required=true) MultipartFile[] files, @RequestPart(name="theme", required=false) String theme) {
         // Wir erstellen vorab eine JobId, damit man Logeinträge dieser JobId zuordnen kann.
         UUID jobIdUuid = UUID.randomUUID();
         String jobId = jobIdUuid.toString();
+
+        log.debug("<{}> Selected theme: {}", jobId, theme);
+        
+        // Null jobrunr nicht übergeben werden?
+        String themeString;
+        if (theme == null) {
+            themeString = "";
+        } else {
+            themeString = theme;
+        }
         
         log.debug("<{}> Number of uploaded files: {}", jobId, files.length);
         
@@ -125,7 +135,7 @@ public class ApiController {
             log.debug("<{}> Number of uploaded ili files: {}", jobId, iliFiles.size());
             log.debug("<{}> Number of uploaded config files: {}", jobId, configFiles.size());
                         
-            jobScheduler.enqueue(jobIdUuid, () -> ilivalidatorService.validate(dataFiles.toArray(new Path[0]), iliFiles.toArray(new Path[0]), configFiles.toArray(new Path[0])));
+            jobScheduler.enqueue(jobIdUuid, () -> ilivalidatorService.validate(dataFiles.toArray(new Path[0]), iliFiles.toArray(new Path[0]), configFiles.toArray(new Path[0]), themeString));
             log.debug("<{}> Job is being queued", jobId);
         } else if (validationType == ValidationType.CSV) {
             for (Path path : uploadedFiles) {

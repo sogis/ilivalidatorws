@@ -4,6 +4,13 @@
 
 Der *ilivalidator web service* stellt eine einfache Art dar INTERLIS-Daten gegenüber einem INTERLIS-Modell zu prüfen (= Modellkonformität). Die zu prüfenden INTERLIS-Daten werden mittels Webformular auf einen Server hochgeladen, wo sie anschliessend automatisch geprüft werden. Das Prüfresultat wird als Logdatei (.log und .xtf) zum Download bereitgestellt. 
 
+Man kann die Validierung als Benutzer auf zwei Arten steuern:
+
+- Man wählt das Thema mittels URL-Parameter (`?t=nutzungsplanung`). Der Service sucht in seinem Config-Verzeichnis ein _nutzungsplanunug.ini_-Datei und verwendet diese, falls vorhanden.
+- Der Benutzer lädt eine _ini_-Datei zusammen mit der zur prüfenden Datei hoch.
+
+Der URL-Parameter überschreibt die hochgeladenen ini-Datei.
+
 Beim Aufruf des *ilivalidator web services* erscheint folgendes Webformular:
 
 ![ilivalidator Startseite](./images/ilivalidator01.png)
