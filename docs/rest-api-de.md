@@ -21,6 +21,11 @@ curl -i -X POST -F 'files=@ch.so.afu.abbaustellen.xtf' -F 'files=@ch.so.avt.verk
 
 (Unter Umständen muss `files[]` statt `files` verwendet werden.)
 
+Es gibt einen weiteren Parameter `theme`. Mit diesem lässt sich einfach eine server-seitige Konfiguration wählen:
+
+```
+curl -i -X POST -F 'files=@2457_Messen_vorher.xtf' -F 'theme=nutzungsplanung' http://localhost:8080/api/jobs
+```
 
 Der Rückgabewert des POST-Requests ist:
 

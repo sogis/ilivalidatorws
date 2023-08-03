@@ -5,6 +5,7 @@ import org.apache.catalina.Wrapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.embedded.tomcat.TomcatContextCustomizer;
 import org.springframework.boot.web.embedded.tomcat.TomcatServletWebServerFactory;
+import org.springframework.boot.web.server.MimeMappings;
 import org.springframework.boot.web.server.WebServerFactoryCustomizer;
 import org.springframework.stereotype.Component;
 
@@ -38,7 +39,7 @@ public class MyTomcatWebServerCustomizer implements WebServerFactoryCustomizer<T
                 defServlet.addInitParameter("sortDirectoriesFirst", "true");
                 defServlet.addInitParameter("readOnly", "true");
                 defServlet.addInitParameter("contextXsltFile", "/listing.xsl");
-                defServlet.addMapping("/"+childFolder+"/*");                
+                defServlet.addMapping("/"+childFolder+"/*");       
             }
         };
         factory.addContextCustomizers(tomcatContextCustomizer);        

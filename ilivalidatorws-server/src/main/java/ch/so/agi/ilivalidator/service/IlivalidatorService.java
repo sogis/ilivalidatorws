@@ -68,7 +68,7 @@ public class IlivalidatorService {
      */
     @Job(name = "Ilivalidator", retries=0)
     public synchronized boolean validate(Path[] transferFiles, Path[] modelFiles,
-            Path[] configFiles) throws IoxException, IOException {
+            Path[] configFiles, String theme) throws IoxException, IOException {
         
         // Wenn wir nicht das "local"-Filesystem verwenden, müssen die Daten zuerst lokal
         // verfügbar gemacht werden, weil ilivalidator nur mit "File" und nicht mit "Path" umgehen kann.
@@ -155,16 +155,22 @@ public class IlivalidatorService {
             // überschreiben.
             settings.setValue(Validator.SETTING_ALL_OBJECTS_ACCESSIBLE, null);
             log.debug("Uploaded config file used: {}", configFileNames.get(0));
+        } else if (theme != null) {
+              File configFile = Paths.get(docBase, configDirectoryName, INI_SUBDIRECTORY, theme.toLowerCase() + ".ini").toFile();
+              if (configFile.exists()) {
+                  settings.setValue(Validator.SETTING_CONFIGFILE, configFile.getAbsolutePath());
+                  log.debug("Config file by theme found in config directory: {}", configFile.getAbsolutePath());
+              }
         } else {
-            for (String transferFileName : transferFileNames) {
-                String modelName = getModelNameFromTransferFile(transferFileName);
-                File configFile = Paths.get(docBase, configDirectoryName, INI_SUBDIRECTORY, modelName.toLowerCase() + ".ini").toFile();
-                if (configFile.exists()) {
-                    settings.setValue(Validator.SETTING_CONFIGFILE, configFile.getAbsolutePath());
-                    log.debug("Config file found in config directory: {}", configFile.getAbsolutePath());
-                    break;
-                }
-            }
+              for (String transferFileName : transferFileNames) {
+                  String modelName = getModelNameFromTransferFile(transferFileName);
+                  File configFile = Paths.get(docBase, configDirectoryName, INI_SUBDIRECTORY, modelName.toLowerCase() + ".ini").toFile();
+                  if (configFile.exists()) {
+                      settings.setValue(Validator.SETTING_CONFIGFILE, configFile.getAbsolutePath());
+                      log.debug("Config file by model name found in config directory: {}", configFile.getAbsolutePath());
+                      break;
+                  }
+              }            
         }
         
         log.info("Validation start");

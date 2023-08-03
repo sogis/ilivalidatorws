@@ -43,7 +43,7 @@ public abstract class ResourcesTests {
     public void isIniAvailable() throws Exception {
         String serverUrl = "http://localhost:"+port+CONFIG_ENDPOINT+"ini/";
 
-        URL logFileUrl = new URL(serverUrl + "so_nutzungsplanung_20171118.ini");
+        URL logFileUrl = new URL(serverUrl + "nutzungsplanung.ini");
 
         String fileContents = null;
         try (InputStream in = logFileUrl.openStream()) {
