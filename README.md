@@ -65,7 +65,7 @@ Die allermeisten Optionen sind via Umgebungsvariablen exponiert und somit verän
 | Name | Beschreibung | Standard |
 |-----|-----|-----|
 | `MAX_FILE_SIZE` | Die maximale Grösse einer Datei, die hochgeladen werden kann in Megabyte. | `300` |
-| `LOG_LEVEL_FRAMEWORK` | Das Logging-Level des Spring Boot Frameworks. | `INFO` |
+| `LOG_LEVEL` | Das Logging-Level des Spring Boot Frameworks. | `INFO` |
 | `LOG_LEVEL_DB_CONNECTION_POOL` | Das Logging-Level des DB-Connection-Poolsocket. | `INFO` |
 | `LOG_LEVEL_APPLICATION` | Das Logging-Level der Anwendung (= selber geschriebener Code). | `DEBUG` |
 | `CONNECT_TIMEOUT` | Die Zeit in Millisekunden, die bis zu einem erfolgreichem Connect gewartet wird. Betrifft sämtliche Methoden, welche `sun.net.client.defaultConnectTimeout` berücksichtigen. Die Option dient dazu damit langsame INTERLIS-Modellablage schneller zu einem Timeout führen. | `5000` |
