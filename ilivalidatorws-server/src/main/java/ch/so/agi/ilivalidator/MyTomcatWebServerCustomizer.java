@@ -28,6 +28,11 @@ public class MyTomcatWebServerCustomizer implements WebServerFactoryCustomizer<T
      */
     @Override
     public void customize(TomcatServletWebServerFactory factory) {
+        MimeMappings mappings = new MimeMappings(MimeMappings.DEFAULT);
+        mappings.add("ili","text/plain; charset=UTF-8");
+        mappings.add("ini","text/plain; charset=UTF-8");
+        factory.setMimeMappings(mappings);
+
         TomcatContextCustomizer tomcatContextCustomizer = new TomcatContextCustomizer() {
             @Override
             public void customize(Context context) {
