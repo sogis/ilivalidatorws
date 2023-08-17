@@ -129,7 +129,7 @@ public class IlivalidatorService {
         // bereits berücksichtigt.
         File builtinIliFiles = Paths.get(docBase, configDirectoryName, ILI_SUBDIRECTORY).toFile();
         settingIlidirs = builtinIliFiles.getAbsolutePath() + ";" + settingIlidirs;
-        settings.setValue(Validator.SETTING_ILIDIRS, Validator.SETTING_DEFAULT_ILIDIRS);
+        settings.setValue(Validator.SETTING_ILIDIRS, settingIlidirs);
 
         log.debug("Setting ilidirs: {}", settingIlidirs);
         
