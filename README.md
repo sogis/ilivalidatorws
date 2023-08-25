@@ -127,20 +127,22 @@ version: '3'
 services:
   frontend:
     image: sogis/ilivalidator-web-service:2
+    restart: unless-stopped
     environment:
       TZ: Europe/Zurich
     ports:
       - 8080:8080
       - 8000:8000
     volumes:
-      - type: bind
-        source: /tmp/docbase
+      - type: volume
+        source: docbase
         target: /docbase
-      - type: bind
-        source: /tmp/work
+      - type: volume
+        source: work
         target: /work
   worker:
     image: sogis/ilivalidator-web-service:2
+    restart: unless-stopped
     deploy:
       replicas: 2
     environment:
@@ -150,12 +152,15 @@ services:
       UNPACK_CONFIG_FILES: "false"
       CLEANER_ENABLED: "false"
     volumes:
-      - type: bind
-        source: /tmp/docbase
+      - type: volume
+        source: docbase
         target: /docbase
-      - type: bind
-        source: /tmp/work
+      - type: volume
+        source: work
         target: /work
+volumes:
+  docbase:
+  work:
 ```
 
 Es wird ein "frontend"-Service gestartet, welche als Schnittstelle gegen aussen dient. Es werden mehrere "worker"-Services gestartet (`replicas`), die nur für das Validieren einer INTERLIS-Transferdatei zuständig sind. Es sind keine Port exponiert, da keiner dieser Service von aussen verfügbar sein muss. Es werden verschiedene Applikationsfunktionen ausgeschaltet (sieh Umgebungsvariablen). Das Jobmanagement wird mit [Jobrunr](https://jobrunr.io) gemacht.
