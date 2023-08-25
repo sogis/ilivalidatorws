@@ -97,6 +97,12 @@ Connection: close
 {"message":"Job not deleted"}
 ```
 
+## Internal API
+
+### /api/profiles
+
+Liefert die auf dem Server vorhandenen ilivalidator-Konfigurationen zurück. Damit wird das GUI gesteuert.
+
 ## Links
 
 - https://dunnhq.com/posts/2021/long-running-rest-requests/

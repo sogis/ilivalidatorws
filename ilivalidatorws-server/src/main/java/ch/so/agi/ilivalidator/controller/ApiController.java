@@ -1,6 +1,7 @@
 package ch.so.agi.ilivalidator.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -20,14 +21,19 @@ import ch.so.agi.ilivalidator.service.CsvValidatorService;
 import ch.so.agi.ilivalidator.service.IlivalidatorService;
 import ch.so.agi.ilivalidator.service.StorageService;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.apache.commons.io.FilenameUtils;
 import org.jobrunr.jobs.Job;
@@ -49,7 +55,13 @@ public class ApiController {
     private static final String LOG_ENDPOINT = "logs";
     private static final String JOB_NOT_FOUND = "Job not found";
     private static final String JOB_DELETED = "Job successfully deleted";
-    
+
+    @Value("${app.docBase}")
+    private String docBase;
+
+    @Value("${app.configDirectoryName}")
+    private String configDirectoryName;
+
     private StorageService storageService;
 
     @Autowired
@@ -68,6 +80,31 @@ public class ApiController {
         this.storageService = storageService;
         log.debug("Storage service implementation: {}", storageService.getClass().getName());
     }
+    
+    @GetMapping("/api/profiles")
+    public ResponseEntity<?> getProfiles() throws IOException {
+        
+        File configDirectory = Paths.get(docBase, configDirectoryName, "ini").toFile();
+        if (!configDirectory.exists()) {
+            return ResponseEntity.noContent().build();
+        }
+        
+        List<String> iniFileNames = new ArrayList<String>();
+        try (Stream<Path> walk = Files.walk(configDirectory.toPath(), 1)) {
+            iniFileNames = walk
+                    .filter(p -> !Files.isDirectory(p))
+                    .filter(p -> p.toString().endsWith(".ini"))
+                    .map(p -> {
+                        return p.getFileName().toString();
+                    })
+                    .collect(Collectors.toList());        
+        }        
+        HashMap<String, List<String>> profiles = new HashMap<>();
+        profiles.put("profiles", iniFileNames);
+        
+        return ResponseEntity.ok().body(profiles);
+    }
+    
     
     @PostMapping(value="/api/jobs", consumes = {"multipart/form-data"})
     // @RequestPart anstelle von @RequestParam und @RequestBody damit swagger korrekt funktioniert.

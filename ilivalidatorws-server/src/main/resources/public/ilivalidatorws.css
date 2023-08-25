@@ -82,6 +82,16 @@ a.default-link:visited {
 	margin-top: 30px;
 }
 
+select {
+    margin-bottom: 20px;   
+    font-size: 16px;
+    background: #efefef;
+    padding: 8px 20px;
+    border-radius: 5px;
+    border-color: #efefef;
+    color: #333333;
+}
+
 input[type=file] {
     font-family: Frutiger, 'Fira Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;   
     width: 450px;

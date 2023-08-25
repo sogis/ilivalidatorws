@@ -29,11 +29,16 @@ import elemental2.dom.HTMLDocument;
 import elemental2.dom.HTMLElement;
 import elemental2.dom.HTMLFormElement;
 import elemental2.dom.HTMLInputElement;
+import elemental2.dom.HTMLOptionElement;
+import elemental2.dom.HTMLOptionsCollection;
+import elemental2.dom.HTMLSelectElement;
 import elemental2.dom.Location;
 import elemental2.dom.RequestInit;
 import elemental2.dom.URL;
 import elemental2.dom.XMLHttpRequest;
 import elemental2.promise.Promise;
+import jsinterop.base.Any;
+import jsinterop.base.Js;
 import jsinterop.base.JsPropertyMap;
 
 public class App implements EntryPoint {
@@ -57,13 +62,35 @@ public class App implements EntryPoint {
     private Timer apiTimer;
     private static final int API_REQUEST_PERIOD_MILLIS = 5000;
     
+    private List<String> validationProfiles = new ArrayList<>();
+    
     private HTMLFormElement form;
+    private HTMLSelectElement select;
     private HTMLInputElement input;
     private HTMLButtonElement button;
     private HTMLDivElement protocolContainer;
     
     public void onModuleLoad() {
-        init();
+        DomGlobal.fetch("/api/profiles").then(response -> {
+            if (!response.ok) {
+                DomGlobal.window.alert(response.statusText + ": " + response.body);
+                return null;
+            }
+            return response.text();
+        }).then(json -> {            
+            JsPropertyMap<Object> profilesMap = Js.asPropertyMap(Global.JSON.parse(json));
+            Any[] profilesArray = profilesMap.getAsAny("profiles").asArray();
+            for (int i=0; i<profilesArray.length; i++) {
+                //console.log(profilesArray[i]);
+                validationProfiles.add(profilesArray[i].asString());
+            }
+            init();
+            return null;
+        }).catch_(error -> {
+            console.log(error);
+            DomGlobal.window.alert(error.toString());
+            return null;
+        });
     }
     
     public void init() {                                
@@ -107,6 +134,20 @@ public class App implements EntryPoint {
         form.enctype = "multipart/form-data";
         form.action = "";        
         container.appendChild(form);
+        
+        select = (HTMLSelectElement) document.createElement("select");        
+        HTMLOptionsCollection options = select.options;
+
+        HTMLOptionElement option = (HTMLOptionElement) document.createElement("option");        
+        option.text = "fubar";
+        options.add(option);
+        
+        
+        select.options = options;
+        form.appendChild(select);
+        
+        
+        form.appendChild(p().element());
         
         input = (HTMLInputElement) document.createElement("input");
         input.setAttribute("type", "file");
@@ -293,4 +334,25 @@ public class App implements EntryPoint {
         button.disabled = false;
         button.textContent = messages.submitButtonDefault();
     }
+    
+//    private void updateUrlLocation(String theme) {
+//        URL url = new URL(DomGlobal.location.href);
+//        String host = url.host;
+//        String protocol = url.protocol;
+//        String pathname = url.pathname;
+//        
+//        String newUrl = protocol + "//" + host + pathname;
+//        if (egrid != null) {
+//            URLSearchParams params = url.searchParams;
+//            params.set("egrid", egrid);
+//            newUrl += "?" + params.toString(); 
+//        } 
+//        updateUrlWithoutReloading(newUrl);
+//    }
+
+    // Update the URL in the browser without reloading the page.
+    private static native void updateUrlWithoutReloading(String newUrl) /*-{
+        $wnd.history.pushState(newUrl, "", newUrl);
+    }-*/;
+
 }

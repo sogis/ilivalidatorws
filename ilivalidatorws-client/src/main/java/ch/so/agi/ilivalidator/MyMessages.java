@@ -11,6 +11,12 @@ public interface MyMessages extends Messages {
     
     @DefaultMessage("Submit") 
     String submitButtonDefault();
+    
+    @DefaultMessage("Choose validation profile") 
+    String validationProfileSelect();
+
+    @DefaultMessage("default (no additional tests)") 
+    String validationProfileSelectDefault();
 
     @DefaultMessage("Validating ...") 
     String submitButtonValidate();
