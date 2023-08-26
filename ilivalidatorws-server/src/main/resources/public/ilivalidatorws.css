@@ -92,6 +92,11 @@ select {
     color: #333333;
 }
 
+#profile-label {
+    font-size: 16px;
+    padding-left: 15px;   
+}
+
 input[type=file] {
     font-family: Frutiger, 'Fira Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;   
     width: 450px;

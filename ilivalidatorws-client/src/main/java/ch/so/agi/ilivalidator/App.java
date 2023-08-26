@@ -5,6 +5,7 @@ import static elemental2.dom.DomGlobal.fetch;
 import static org.jboss.elemento.Elements.*;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 
@@ -35,6 +36,7 @@ import elemental2.dom.HTMLSelectElement;
 import elemental2.dom.Location;
 import elemental2.dom.RequestInit;
 import elemental2.dom.URL;
+import elemental2.dom.URLSearchParams;
 import elemental2.dom.XMLHttpRequest;
 import elemental2.promise.Promise;
 import jsinterop.base.Any;
@@ -138,14 +140,38 @@ public class App implements EntryPoint {
         select = (HTMLSelectElement) document.createElement("select");        
         HTMLOptionsCollection options = select.options;
 
-        HTMLOptionElement option = (HTMLOptionElement) document.createElement("option");        
-        option.text = "fubar";
-        options.add(option);
+        {
+            HTMLOptionElement option = (HTMLOptionElement) document.createElement("option");        
+            option.text = messages.validationProfileSelectDefault();
+            option.value = messages.validationProfileSelectDefault();
+            options.add(option);
+        }
         
+        Collections.sort(validationProfiles);
+        for (String validationProfile : validationProfiles) {
+            HTMLOptionElement option = (HTMLOptionElement) document.createElement("option");        
+            option.text = validationProfile;
+            option.value = validationProfile.substring(0, validationProfile.length()-4);
+            options.add(option);            
+        }
         
         select.options = options;
         form.appendChild(select);
         
+        select.addEventListener("change", new EventListener() {
+            @Override
+            public void handleEvent(Event evt) {
+                String theme = select.selectedOptions.getAt(0).value;
+                if (select.selectedIndex == 0) {
+                    updateUrlLocation(null);
+                } else {
+                    updateUrlLocation(theme);
+                }                
+            }
+            
+        });
+        
+        form.appendChild(span().id("profile-label").textContent(messages.validationProfileSelect()).element());
         
         form.appendChild(p().element());
         
@@ -318,6 +344,16 @@ public class App implements EntryPoint {
         });
         
         container.appendChild(protocolContainer);
+        
+        URL url = new URL(DomGlobal.window.location.href);
+        String theme = url.searchParams.get("t");
+
+        for (int i=0; i<options.length; i++) {
+            HTMLOptionElement option = options.getAt(i);
+            if (option.value.equalsIgnoreCase(theme)) {
+                select.selectedIndex = i;
+            }
+        }        
     }    
     
     private void logToProtocol(String logText) {
@@ -335,20 +371,20 @@ public class App implements EntryPoint {
         button.textContent = messages.submitButtonDefault();
     }
     
-//    private void updateUrlLocation(String theme) {
-//        URL url = new URL(DomGlobal.location.href);
-//        String host = url.host;
-//        String protocol = url.protocol;
-//        String pathname = url.pathname;
-//        
-//        String newUrl = protocol + "//" + host + pathname;
-//        if (egrid != null) {
-//            URLSearchParams params = url.searchParams;
-//            params.set("egrid", egrid);
-//            newUrl += "?" + params.toString(); 
-//        } 
-//        updateUrlWithoutReloading(newUrl);
-//    }
+    private void updateUrlLocation(String theme) {
+        URL url = new URL(DomGlobal.location.href);
+        String host = url.host;
+        String protocol = url.protocol;
+        String pathname = url.pathname;
+        
+        String newUrl = protocol + "//" + host + pathname;
+        if (theme != null) {
+            URLSearchParams params = url.searchParams;
+            params.set("t", theme);
+            newUrl += "?" + params.toString(); 
+        } 
+        updateUrlWithoutReloading(newUrl);
+    }
 
     // Update the URL in the browser without reloading the page.
     private static native void updateUrlWithoutReloading(String newUrl) /*-{
