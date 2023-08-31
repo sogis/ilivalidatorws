@@ -4,6 +4,12 @@
 
 The ilivalidator web service is a [Spring Boot](https://projects.spring.io/spring-boot/) application and uses [ilivalidator](https://github.com/claeis/ilivalidator) for the INTERLIS transfer file validation.
 
+## Ideen
+
+- Zusatzprüfungen selber irgendwohin deployen (z.B. Github).
+  * ini und ili?
+  * ilidata.xml / ilimodels.xml auf Github-Repos, die dann kontaktiert werden?
+
 ## Beschreibung
 
 * checks INTERLIS 1+2 transfer files: see [https://github.com/claeis/ilivalidator](https://github.com/claeis/ilivalidator) for all the INTERLIS validation magic of ilivalidator
