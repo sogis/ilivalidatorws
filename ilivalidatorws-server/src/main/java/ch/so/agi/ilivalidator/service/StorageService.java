@@ -8,7 +8,7 @@ import org.springframework.web.multipart.MultipartFile;
 public interface StorageService {
     void init();
 
-    Path[] store(MultipartFile[] files, String jobId);
+    Path[] store(MultipartFile[] files, String jobId) throws IOException;
         
     void store(Path localFile, Path targetPath);
     

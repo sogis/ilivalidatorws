@@ -64,7 +64,7 @@ public class Application extends SpringBootServletInitializer {
     @Value("${app.unpackConfigFiles}")
     private boolean unpackConfigFiles;
 
-    @Value("${app.awsAccessKey")
+    @Value("${app.awsAccessKey}")
     private String accessKey;
 
     @Value("${app.awsSecretKey}")
@@ -98,19 +98,19 @@ public class Application extends SpringBootServletInitializer {
     
     @ConditionalOnProperty(name = "app.storageService", havingValue = "local", matchIfMissing = false)
     @Bean 
-    public StorageService filesystemStorageService() {
-         return new LocalStorageService();
+    StorageService filesystemStorageService() {
+        return new LocalStorageService();
     }
 
     @ConditionalOnProperty(name = "app.storageService", havingValue = "s3", matchIfMissing = false)
     @Bean 
-    public StorageService s3StorageService() throws IOException {
-         return new S3StorageService(s3FileSystem());
+    StorageService s3StorageService() throws IOException {
+        return new S3StorageService(s3FileSystem());
     }    
     
     @ConditionalOnProperty(name = "app.storageService", havingValue = "s3", matchIfMissing = false)
     @Bean
-    public FileSystem s3FileSystem() throws IOException {
+    FileSystem s3FileSystem() throws IOException {
         Map<String, String> env = new HashMap<>();
         env.put(ACCESS_KEY, accessKey);
         env.put(SECRET_KEY, secretKey);

@@ -1,27 +1,20 @@
 package ch.so.agi.ilivalidator.service;
 
 import java.io.IOException;
-import java.net.URI;
 import java.nio.file.FileSystem;
-import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.carlspring.cloud.storage.s3fs.S3FileSystem;
-import org.carlspring.cloud.storage.s3fs.S3FileSystemProvider;
-import org.carlspring.cloud.storage.s3fs.S3Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
-
 
 public class S3StorageService implements StorageService {
     private final Logger log = LoggerFactory.getLogger(this.getClass());
@@ -44,14 +37,17 @@ public class S3StorageService implements StorageService {
     }
 
     @Override
-    public Path[] store(MultipartFile[] files, String jobId) {    
+    public Path[] store(MultipartFile[] files, String jobId) throws IOException {    
+        log.debug("Work directory: {}", workDirectory);
         Path workDirectoryPath = s3fs.getPath(workDirectory);
+        log.debug("Work directory Path: " + workDirectoryPath);
         Path jobDirectoryPath = workDirectoryPath.resolve(jobId);
         try {
             Files.createDirectory(jobDirectoryPath);
-        } catch (IOException e) {
-            throw new FileStorageException("Could not create temp dir.", e);
-        }
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new IOException("Could not create directory. Please try again!");
+        } 
         
         List<Path> paths = new ArrayList<>();
         for (MultipartFile file : files) {
@@ -68,9 +64,10 @@ public class S3StorageService implements StorageService {
                 Files.copy(file.getInputStream(), targetLocation, StandardCopyOption.REPLACE_EXISTING);
                 paths.add(targetLocation);
             
-            } catch (IOException ex) {
-                throw new FileStorageException("Could not store file " + fileName + ". Please try again!", ex);
-            }
+            } catch (Exception e) {
+                e.printStackTrace();
+                throw new IOException("Could not store file. Please try again!");
+            } 
         }
         return paths.toArray(new Path[0]);
     }

@@ -14,8 +14,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
-import org.springframework.web.multipart.MultipartFile;
-
 public class LocalStorageService implements StorageService {
     private final Logger log = LoggerFactory.getLogger(this.getClass());
 
@@ -36,14 +34,16 @@ public class LocalStorageService implements StorageService {
     }
 
     @Override
-    public Path[] store(MultipartFile[] files, String jobId) {
+    public Path[] store(MultipartFile[] files, String jobId) throws IOException {
+        log.debug("Work directory: {}", workDirectory);
         Path workDirectoryPath = Paths.get(workDirectory);
         Path jobDirectoryPath = workDirectoryPath.resolve(jobId);
         try {
             Files.createDirectory(jobDirectoryPath);
-        } catch (IOException e) {
-            throw new FileStorageException("Could not create temp dir.", e);
-        }
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new IOException("Could not create directory: " + jobDirectoryPath + ". Please try again!");
+        } 
 
         List<Path> paths = new ArrayList<>();
         for (MultipartFile file : files) {
@@ -61,8 +61,9 @@ public class LocalStorageService implements StorageService {
                 Files.copy(file.getInputStream(), targetLocation, StandardCopyOption.REPLACE_EXISTING);
                 paths.add(targetLocation);
             
-            } catch (IOException ex) {
-                throw new FileStorageException("Could not store file " + fileName + ". Please try again!", ex);
+            } catch (Exception e) {
+                e.printStackTrace();
+                throw new IOException("Could not store file " + fileName + ". Please try again!");
             }
         }
         return paths.toArray(new Path[0]);

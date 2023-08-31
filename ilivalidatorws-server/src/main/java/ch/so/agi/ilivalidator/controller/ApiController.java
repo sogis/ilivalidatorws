@@ -126,7 +126,12 @@ public class ApiController {
         
         log.debug("<{}> Number of uploaded files: {}", jobId, files.length);
         
-        Path[] uploadedFiles = storageService.store(files, jobId);
+        Path[] uploadedFiles = null;
+        try {
+            uploadedFiles = storageService.store(files, jobId);
+        } catch (IOException e) {
+            throw new RuntimeException("Could not store files.");
+        }
 
         // Mit einem einfachen Ansatz wird versucht herauszufinden, welcher Validierungstyp verwendet werden muss.
         // D.h. welches Format vorliegt und geprüft werden soll.
