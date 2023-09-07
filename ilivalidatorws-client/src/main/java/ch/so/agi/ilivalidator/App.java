@@ -10,6 +10,13 @@ import java.util.List;
 
 
 import com.google.gwt.core.client.GWT;
+
+import org.dominokit.domino.ui.button.Button;
+import org.dominokit.domino.ui.grid.Column;
+import org.dominokit.domino.ui.grid.Row;
+import org.dominokit.domino.ui.modals.ModalDialog;
+import org.dominokit.domino.ui.style.Color;
+import org.dominokit.domino.ui.utils.TextNode;
 import org.gwtproject.safehtml.shared.SafeHtmlUtils;
 
 import com.google.gwt.core.client.EntryPoint;
@@ -120,11 +127,15 @@ public class App implements EntryPoint {
         container.appendChild(div().css("ilivalidatorws-title").textContent("ilivalidator web service").element());
 
         // Info
-        String infoString = "Der <i>ilivalidator web service</i> stellt eine einfache Art dar INTERLIS-Daten gegenüber "
-                + "einem INTERLIS-Modell zu prüfen. Sie können eine oder mehrere INTERLIS-Transferdateien (.xtf, .xml, .itf) "
-                + "hochladen und prüfen. Er erlaubt es auch eigene Datenmodelle und Konfigurationsdateien mitzuschicken. "
-                + "Weitere Informationen finden sich <a class='default-link' "
-                + "href='https://github.com/sogis/ilivalidatorws/blob/master/docs/user-manual-de.md' target='_blank'>hier</a>.";
+//        String infoString = "Der <i>ilivalidator web service</i> stellt eine einfache Art dar INTERLIS-Daten gegenüber "
+//                + "einem INTERLIS-Modell zu prüfen. Sie können eine oder mehrere INTERLIS-Transferdateien (.xtf, .xml, .itf) "
+//                + "hochladen und prüfen. Er erlaubt es auch eigene Datenmodelle und Konfigurationsdateien mitzuschicken. "
+//                + "Weitere Informationen finden sich <a class='default-link' "
+//                + "href='https://github.com/sogis/ilivalidatorws/blob/master/docs/user-manual-de.md' target='_blank'>hier</a>.";
+        
+        String infoString = "Der <i>ilivalidator web service</i> prüft, ob deine INTERLIS-Transferdateien (.xtf, .xml, .itf) modellkonform sind. "
+        + "Für einige Datenmodelle gibt es ein zusätzliches Prüfprofil, bei welchem die Prüfung erweitert ist.";
+        
         container.appendChild(div().css("info").innerHtml(SafeHtmlUtils.fromTrustedString(infoString)).element());
         
         // Protocol
@@ -344,6 +355,50 @@ public class App implements EntryPoint {
         });
         
         container.appendChild(protocolContainer);
+        
+        HTMLDivElement helpElement = div().id("button-help").element();
+        helpElement.appendChild(TextNode.of(messages.helpButtonText()));
+        helpElement.addEventListener("click", new EventListener() {
+
+            @Override
+            public void handleEvent(Event evt) {
+                ModalDialog modal = ModalDialog.create(messages.helpButtonText()).setAutoClose(true);
+                modal.css("modal-object");
+
+                modal.appendChild(
+                        Row.create()
+                        .appendChild(Column.span6().appendChild(TextNode.of(messages.helpGeneralLink())))
+                        .appendChild(Column.span6().appendChild(a().attr("href", "https://github.com/sogis/ilivalidatorws/blob/main/docs/user-manual-de.md")
+                                .attr("target", "_blank").attr("class", "default-link").add(TextNode.of("user-manual-de.md")))).element()
+                        );
+
+                modal.appendChild(
+                        Row.create()
+                        .appendChild(Column.span6().appendChild(TextNode.of(messages.helpLandUsePlanLink())))
+                        .appendChild(Column.span6().appendChild(a().attr("href", "https://github.com/sogis/ilivalidatorws/blob/main/docs/user-manual-de-nplso.md")
+                                .attr("target", "_blank").attr("class", "default-link").add(TextNode.of("user-manual-de-nplso.md")))).element()
+                        );
+
+                modal.appendChild(
+                        Row.create()
+                        .appendChild(Column.span6().appendChild(TextNode.of(messages.helpRestApiLink())))
+                        .appendChild(Column.span6().appendChild(a().attr("href", "https://github.com/sogis/ilivalidatorws/blob/main/docs/rest-api-de.md")
+                                .attr("target", "_blank").attr("class", "default-link").add(TextNode.of("rest-api-de.md")))).element()
+                        );
+
+                Button closeButton = Button.create(messages.closeButton().toUpperCase()).linkify();
+                closeButton.removeWaves();
+                closeButton.setBackground(Color.RED_DARKEN_3);
+                EventListener closeModalListener = (evt2) -> modal.close();
+                closeButton.addClickListener(closeModalListener);
+                modal.appendFooterChild(closeButton);
+                
+                modal.open();
+            }
+        });
+        
+        container.appendChild(helpElement);
+        
         
         URL url = new URL(DomGlobal.window.location.href);
         String theme = url.searchParams.get("t");

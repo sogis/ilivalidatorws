@@ -41,4 +41,19 @@ public interface MyMessages extends Messages {
 
     @DefaultMessage("Errors found") 
     String validationStatusTxtFail();
+    
+    @DefaultMessage("Info & Help") 
+    String helpButtonText();
+
+    @DefaultMessage("General tutorial") 
+    String helpGeneralLink();
+
+    @DefaultMessage("Tutorial for land-use planning") 
+    String helpLandUsePlanLink();
+
+    @DefaultMessage("Tutorial REST-API") 
+    String helpRestApiLink();
+    
+    @DefaultMessage("Schliessen") 
+    String closeButton();
 }

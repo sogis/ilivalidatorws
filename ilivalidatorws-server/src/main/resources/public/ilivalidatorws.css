@@ -157,6 +157,24 @@ button[disabled].submit-button {
 	/*border-top: 1px solid #e5e5e5;*/
 }
 
+#button-help {
+    cursor: help; 
+    margin-top: 100px; 
+    font-size: 16px; 
+    float: right; 
+    padding: 10px 20px 10px 20px;
+    border-radius: 5px; 
+    background-color: #efefef;
+}
+
+.modal-object {
+    max-height: calc(100% - 120px);
+    overflow-y: auto; 
+}
+
+
+
+
 #search-panel {
     margin-top: 40px;
     margin-bottom: 30px;
@@ -196,10 +214,7 @@ a.badge-link:visited {
     font-size: 16px;
 }
 
-.modal-object {
-	max-height: calc(100% - 120px);
-	overflow-y: auto; 
-}
+
 
 .model-header {
     font-size: 16px !important;
