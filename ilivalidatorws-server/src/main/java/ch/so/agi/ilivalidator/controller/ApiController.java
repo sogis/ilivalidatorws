@@ -94,6 +94,7 @@ public class ApiController {
             iniFileNames = walk
                     .filter(p -> !Files.isDirectory(p))
                     .filter(p -> p.toString().endsWith(".ini"))
+                    .filter(p -> !p.toString().endsWith("-meta.ini"))
                     .map(p -> {
                         return p.getFileName().toString();
                     })

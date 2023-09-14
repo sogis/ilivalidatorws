@@ -146,7 +146,23 @@ public class IlivalidatorService {
         // Es werden alle Modellnamen aus den XTF-Dateien eruiert und dann wird der
         // erste Config-Datei-Match verwendet.
         if (configFileNames.size() > 0) {
-            settings.setValue(Validator.SETTING_CONFIGFILE, configFileNames.get(0));
+            
+            // Dateien ohne "-meta" sind normale ini-Dateien.
+            for (String fileName : configFileNames) {
+                if (!fileName.contains("-meta")) {
+                    settings.setValue(Validator.SETTING_CONFIGFILE, fileName);
+                    break;
+                }
+            }
+            
+            // Dateien mit "-meta" sind config ini-Dateien.
+            for (String fileName : configFileNames) {
+                if (fileName.contains("-meta")) {
+                    settings.setValue(Validator.SETTING_META_CONFIGFILE, fileName);
+                    break;
+                }
+            }
+
             // Option muss explizit auf NULL gesetzt werden, dann macht ilivalidator nichts
             // resp. es wird der Wert aus der ini-Datei verwendet.
             // Siehe Quellcode ilivalidator.
@@ -155,12 +171,23 @@ public class IlivalidatorService {
             // überschreiben.
             settings.setValue(Validator.SETTING_ALL_OBJECTS_ACCESSIBLE, null);
             log.debug("Uploaded config file used: {}", configFileNames.get(0));
+            
+            // TODO: Meta config handling.
+            // Geht wohl nur über Konvention: "-meta.ini" oder so.
+            
         } else if (theme != null) {
               File configFile = Paths.get(docBase, configDirectoryName, INI_SUBDIRECTORY, theme.toLowerCase() + ".ini").toFile();
               if (configFile.exists()) {
                   settings.setValue(Validator.SETTING_CONFIGFILE, configFile.getAbsolutePath());
                   log.debug("Config file by theme found in config directory: {}", configFile.getAbsolutePath());
               }
+              
+              File metaConfigFile = Paths.get(docBase, configDirectoryName, INI_SUBDIRECTORY, theme.toLowerCase() + "-meta.ini").toFile();
+              if (metaConfigFile.exists()) {
+                  settings.setValue(Validator.SETTING_META_CONFIGFILE, metaConfigFile.getAbsolutePath());
+                  log.debug("Meta config file by theme found in config directory: {}", metaConfigFile.getAbsolutePath());
+              }
+
         } else {
               for (String transferFileName : transferFileNames) {
                   String modelName = getModelNameFromTransferFile(transferFileName);

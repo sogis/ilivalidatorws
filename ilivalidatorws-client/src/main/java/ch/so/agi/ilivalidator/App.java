@@ -127,12 +127,6 @@ public class App implements EntryPoint {
         container.appendChild(div().css("ilivalidatorws-title").textContent("ilivalidator web service").element());
 
         // Info
-//        String infoString = "Der <i>ilivalidator web service</i> stellt eine einfache Art dar INTERLIS-Daten gegenüber "
-//                + "einem INTERLIS-Modell zu prüfen. Sie können eine oder mehrere INTERLIS-Transferdateien (.xtf, .xml, .itf) "
-//                + "hochladen und prüfen. Er erlaubt es auch eigene Datenmodelle und Konfigurationsdateien mitzuschicken. "
-//                + "Weitere Informationen finden sich <a class='default-link' "
-//                + "href='https://github.com/sogis/ilivalidatorws/blob/master/docs/user-manual-de.md' target='_blank'>hier</a>.";
-        
         String infoString = "Der <i>ilivalidator web service</i> prüft, ob deine INTERLIS-Transferdateien (.xtf, .xml, .itf) modellkonform sind. "
         + "Für einige Datenmodelle gibt es ein zusätzliches Prüfprofil, bei welchem die Prüfung erweitert ist.";
         
@@ -338,11 +332,16 @@ public class App implements EntryPoint {
                             });
                             
                             httpRequest.send();
+
+                            // Wird am Ende geresettet, darum muss es händisch nachgeführt werden.
+                            // TODO: Grund mir nicht klar.
+                            updateComboBox(options);
                         }
+                        
                     };
                     
                     apiTimer.scheduleRepeating(API_REQUEST_PERIOD_MILLIS);
-                    
+
                     return null;
                 })
                 .catch_(error -> {
@@ -410,6 +409,18 @@ public class App implements EntryPoint {
             }
         }        
     }    
+    
+    private void updateComboBox(HTMLOptionsCollection options) {
+        URL url = new URL(DomGlobal.window.location.href);
+        String theme = url.searchParams.get("t");
+       
+        for (int i=0; i<options.length; i++) {
+            HTMLOptionElement option = options.getAt(i);
+            if (option.value.equalsIgnoreCase(theme)) {
+                select.selectedIndex = i;
+            }
+        }        
+    }
     
     private void logToProtocol(String logText) {
         protocolContainer.appendChild(div().innerHtml(SafeHtmlUtils.fromTrustedString(logText)).element());
