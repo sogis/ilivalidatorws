@@ -92,8 +92,10 @@ public class App implements EntryPoint {
 
         if (pathname.length() == 1) {
             pathname = "";
+            console.log("length 1");
         } else {
             pathname = pathname.substring(1);
+            console.log("length not 1");
         }
 
         String requestUrl = protocol + "//" + host + pathname + API_PROFILES_ENDPOINT;
