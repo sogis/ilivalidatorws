@@ -81,8 +81,8 @@ public class App implements EntryPoint {
     
     public void onModuleLoad() {
         URL url = new URL(DomGlobal.location.href);
-//        String host = url.host;
-//        String protocol = url.protocol;
+        String host = url.host;
+        String protocol = url.protocol;
         String pathname = url.pathname;
 
         if (pathname.length() == 1) {
@@ -90,10 +90,11 @@ public class App implements EntryPoint {
         } else {
             pathname = pathname.substring(1);
         }
-        console.log("pathname: " + pathname);
 
+        String requestUrl = protocol + "//" + host + pathname + "/api/profiles";
+        console.log("requestUrl: " + requestUrl);
         
-        DomGlobal.fetch(pathname + "/api/profiles").then(response -> {
+        DomGlobal.fetch(requestUrl).then(response -> {
             if (!response.ok) {
                 DomGlobal.window.alert(response.statusText + ": " + response.body);
                 return null;
@@ -186,7 +187,6 @@ public class App implements EntryPoint {
                     updateUrlLocation(theme);
                 }                
             }
-            
         });
         
         form.appendChild(span().id("profile-label").textContent(messages.validationProfileSelect()).element());
