@@ -68,6 +68,8 @@ Die allermeisten Optionen sind via Umgebungsvariablen exponiert und somit verän
 
 ### Optionen (Umgebungsvariablen)
 
+**Achtung:** Das Dockerimage verwendet teilweise andere Defaultwerte, z.B. ist der Defaultwert von `WORK_DIRECTORY` `/work`. Entsprechend ändert sich auch die Default-JDBC-Url. Siehe dazu die Datei _application-docker.yml_.
+
 | Name | Beschreibung | Standard |
 |-----|-----|-----|
 | `MAX_FILE_SIZE` | Die maximale Grösse einer Datei, die hochgeladen werden kann in Megabyte. | `300` |
