@@ -65,7 +65,8 @@ public class App implements EntryPoint {
     // Wäre momentan aber einziges Setting vom Server. Momentan sein lassen.
     private static int MAX_FILES_SIZE_MB = 300; 
     
-    private static final String API_ENDPOINT = "api/jobs";
+    private static final String API_JOBS_ENDPOINT = "/api/jobs";
+    private static final String API_PROFILES_ENDPOINT = "/api/profiles";
     private static final String HEADER_OPERATION_LOCATION = "Operation-Location";
     
     private Timer apiTimer;
@@ -79,11 +80,15 @@ public class App implements EntryPoint {
     private HTMLButtonElement button;
     private HTMLDivElement protocolContainer;
     
+    private String host; 
+    private String protocol;
+    private String pathname;
+    
     public void onModuleLoad() {
         URL url = new URL(DomGlobal.location.href);
-        String host = url.host;
-        String protocol = url.protocol;
-        String pathname = url.pathname;
+        host = url.host;
+        protocol = url.protocol;
+        pathname = url.pathname;
 
         if (pathname.length() == 1) {
             pathname = "";
@@ -91,7 +96,7 @@ public class App implements EntryPoint {
             pathname = pathname.substring(1);
         }
 
-        String requestUrl = protocol + "//" + host + pathname + "/api/profiles";
+        String requestUrl = protocol + "//" + host + pathname + API_PROFILES_ENDPOINT;
         console.log("requestUrl: " + requestUrl);
         
         DomGlobal.fetch(requestUrl).then(response -> {
@@ -119,6 +124,7 @@ public class App implements EntryPoint {
     public void init() {                                
         // Get url from browser (client) to find out the correct location of resources.
         // And read the theme from query params.
+        // TODO: Ich benötige sie bereits vorher (onModuleLoad). Duplicate -> Bereinigen.
         Location location = DomGlobal.window.location;
 
         // Get document element which will be used to create other elements.
@@ -254,7 +260,10 @@ public class App implements EntryPoint {
                 init.setMethod("POST");
                 init.setBody(formData);
                 
-                DomGlobal.fetch(API_ENDPOINT, init)
+                String requestUrl = protocol + "//" + host + pathname + API_JOBS_ENDPOINT;
+                console.log("requestUrl jobs: " + requestUrl);
+
+                DomGlobal.fetch(requestUrl, init)
                 .then(response -> {
                     if (!response.ok) {
                         resetInputElements();
