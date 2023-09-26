@@ -96,7 +96,6 @@ public class App implements EntryPoint {
         } 
 
         String requestUrl = protocol + "//" + host + pathname + API_PROFILES_ENDPOINT;
-        console.log("requestUrl: " + requestUrl);
         
         DomGlobal.fetch(requestUrl).then(response -> {
             if (!response.ok) {
