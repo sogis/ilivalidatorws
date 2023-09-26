@@ -80,7 +80,20 @@ public class App implements EntryPoint {
     private HTMLDivElement protocolContainer;
     
     public void onModuleLoad() {
-        DomGlobal.fetch("/api/profiles").then(response -> {
+        URL url = new URL(DomGlobal.location.href);
+//        String host = url.host;
+//        String protocol = url.protocol;
+        String pathname = url.pathname;
+
+        if (pathname.length() == 1) {
+            pathname = "";
+        } else {
+            pathname = pathname.substring(1);
+        }
+        console.log("pathname: " + pathname);
+
+        
+        DomGlobal.fetch(pathname + "/api/profiles").then(response -> {
             if (!response.ok) {
                 DomGlobal.window.alert(response.statusText + ": " + response.body);
                 return null;
