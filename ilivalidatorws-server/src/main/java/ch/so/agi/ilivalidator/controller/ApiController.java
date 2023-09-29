@@ -62,6 +62,9 @@ public class ApiController {
     @Value("${app.configDirectoryName}")
     private String configDirectoryName;
 
+    @Value("${app.folderPrefix}")
+    private String folderPrefix;
+
     private StorageService storageService;
 
     @Autowired
@@ -240,13 +243,13 @@ public class ApiController {
         try {
             Job job = storageProvider.getJobById(UUID.fromString(jobId));        
             
-            Path logFile = storageService.load(jobId + "/" + jobId + ".log");
+            Path logFile = storageService.load(folderPrefix + jobId + "/" + jobId + ".log");
 
             String logFileLocation = null;
             String xtfLogFileLocation = null;
             String validationResult = null;
             if (job.getJobState().getName().equals(StateName.SUCCEEDED)) {
-                logFileLocation = Utils.fixUrl(getHost() + "/" + LOG_ENDPOINT + "/" + jobId + "/" + jobId + ".log");
+                logFileLocation = Utils.fixUrl(getHost() + "/" + LOG_ENDPOINT + "/" + folderPrefix + jobId + "/" + jobId + ".log");
                 xtfLogFileLocation = logFileLocation + ".xtf"; 
                 try {
                     // JobResult nur bei Pro-Version. Darum handgestrickt.

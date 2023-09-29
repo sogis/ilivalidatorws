@@ -37,7 +37,7 @@ public class LocalStorageService implements StorageService {
     public Path[] store(MultipartFile[] files, String jobId) throws IOException {
         log.debug("Work directory: {}", workDirectory);
         Path workDirectoryPath = Paths.get(workDirectory);
-        Path jobDirectoryPath = workDirectoryPath.resolve(jobId);
+        Path jobDirectoryPath = workDirectoryPath.resolve(folderPrefix + jobId);
         try {
             Files.createDirectory(jobDirectoryPath);
         } catch (Exception e) {

@@ -37,8 +37,8 @@ public class MainController {
     @Value("${app.workDirectory}")
     private String workDirectory;
     
-    @Value("${app.folderPrefix}")
-    private String folderPrefix;
+//    @Value("${app.folderPrefix}")
+//    private String folderPrefix;
     
     @Autowired
     Settings settings;

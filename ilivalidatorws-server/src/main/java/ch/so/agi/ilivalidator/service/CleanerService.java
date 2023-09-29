@@ -42,6 +42,8 @@ public class CleanerService {
     private void cleanUp() {    
         // TODO: Geht das eleganter?
         // workDirectory ist der Bucket. Müsste anders gemacht werden.
+        long deleteFileAge = 60*60;
+        log.info("Deleting files from previous validation runs older than {} [s] ...", deleteFileAge);
         if (storageService instanceof LocalStorageService) {
             java.io.File[] tmpDirs = new java.io.File(workDirectory).listFiles();
             if(tmpDirs!=null) {
@@ -52,8 +54,10 @@ public class CleanerService {
                             Instant now = Instant.now();
                             
                             long fileAge = now.getEpochSecond() - creationTime.toInstant().getEpochSecond();
-                            if (fileAge > 60*60) {
-                                log.info("deleting {}", tmpDir.getAbsolutePath());
+                            log.debug("found folder with prefix: {}, age [s]: {}", tmpDir, fileAge);
+
+                            if (fileAge > deleteFileAge) {
+                                log.debug("deleting {}", tmpDir.getAbsolutePath());
                                 FileSystemUtils.deleteRecursively(tmpDir);
                             }
                         } catch (IOException e) {

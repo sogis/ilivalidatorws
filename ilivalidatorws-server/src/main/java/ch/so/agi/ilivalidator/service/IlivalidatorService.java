@@ -110,7 +110,11 @@ public class IlivalidatorService {
                 configFileNames.add(localCopy.toFile().getAbsolutePath());
             }
         }
-        logFile = Paths.get(new File(transferFileNames.get(0)).getParent(), jobDirectoryPath.toString() + ".log");
+        
+        // Weil das Verzeichnis nicht nur aus der JobId besteht, sondern ein Prefix besitzt,
+        // muss man dieses wieder entfernen, um den Logfile-Namen zu erhalten (der nur aus JobId)
+        // bestehen soll.
+        logFile = Paths.get(new File(transferFileNames.get(0)).getParent(), jobDirectoryPath.toString().substring(folderPrefix.length()) + ".log");
         logFileName = logFile.toFile().getAbsolutePath();                
 
         Settings settings = new Settings();
