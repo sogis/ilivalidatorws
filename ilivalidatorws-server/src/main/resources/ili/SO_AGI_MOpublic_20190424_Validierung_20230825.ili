@@ -1,0 +1,26 @@
+INTERLIS 2.3;
+
+CONTRACTED MODEL SO_AGI_MOpublic_20190424_Validierung_20230825 (de)
+AT "https://agi.so.ch"
+VERSION "2023-08-25"  =
+  
+IMPORTS SO_AGI_MOpublic_20190424, GeoW_FunctionsExt;
+IMPORTS UNQUALIFIED INTERLIS;
+  
+  VIEW TOPIC SO_AGI_MOpublic_Validierung = 
+  DEPENDS ON SO_AGI_MOpublic_20190424.MOpublic;
+  
+    VIEW v_Fixpunkt
+      PROJECTION OF SO_AGI_MOpublic_20190424.MOpublic.Fixpunkt;
+    =
+      ALL OF Fixpunkt;
+    
+      !!@ name = IsInsideKanton
+      !!@ ilivalid.msg = "Punkt {Nummer} ist nicht innerhalb des Kantons"
+      MANDATORY CONSTRAINT GeoW_FunctionsExt.IsInsideExternalDataset("SO_Hoheitsgrenzen_Publikation_20170626.Hoheitsgrenzen.Gemeindegrenze.Geometrie", "a8bf5f9f-18a7-4cf2-8424-6c656a1de99a", THIS, "Pos");
+
+    END v_Fixpunkt;
+
+  END SO_AGI_MOpublic_Validierung;
+
+END SO_AGI_MOpublic_20190424_Validierung_20230825.
