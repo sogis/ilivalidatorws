@@ -50,7 +50,7 @@ public abstract class ResourcesTests {
             BufferedReader reader = new BufferedReader(new InputStreamReader(in));
             fileContents = reader.lines().collect(Collectors.joining(System.lineSeparator()));
         }
-        assertTrue(fileContents.contains("additionalModels=\"SO_Nutzungsplanung_20171118_Validierung_20211006;SO_FunctionsExt\""));
+        assertTrue(fileContents.contains("additionalModels=\"SO_Nutzungsplanung_20171118_Validierung_20231005\""));
     }
     
     @Test
