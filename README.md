@@ -42,10 +42,10 @@ Die Anwendung besteht aus einer Komponente. Wird ein Datenbankserver für das Sp
 
 ## Konfigurieren und Starten
  
-Die Anwendung kann als gewöhnliche Spring Boot Anwendung gestartet werden:
+Die Anwendung kann momentan nicht als gewöhnliche Spring Boot Anwendung gestartet werden (aka Fatjar). Grund dafür ist, dass eine ilivalidator custom function den Classpath kennen muss, um dort Jar-Dateien zu suchen. `System.getProperty("java.class.path")` liefert im Fatjar-Fall nur `"."` zurück. Die custom function findet dann gar keine Jar-Datei. Es wird keine Fatjar erzeugt, sondern eine Thinjar und sämtliche Dependencies in das _target/lib_-Verzeichnis. Die Anwendung muss nun wie folgt gestartet werden:
 
 ```
-java -jar ilivalidatorws-server/target/ilivalidatorws-exec.jar
+java -cp 'ilivalidatorws.jar:./lib/*' ch.so.agi.ilivalidator.Application
 ```
 
 Konfiguration via _application.yml_ im Verzeichnis in dem der Service gestartet wird. Oder entsprechende alternative Konfigurationsmöglichkeiten von [Spring Boot](https://docs.spring.io/spring-boot/docs/2.7.12/reference/htmlsingle/#features.external-config).

@@ -174,16 +174,14 @@ public class IlivalidatorService {
             // kann nicht --allObjectsAccessible verwenden und mit einem config-File
             // überschreiben.
             settings.setValue(Validator.SETTING_ALL_OBJECTS_ACCESSIBLE, null);
-            log.debug("Uploaded config file used: {}", configFileNames.get(0));
-            
-            // TODO: Meta config handling.
-            // Geht wohl nur über Konvention: "-meta.ini" oder so.
-            
+            log.debug("Uploaded config file used: {}", configFileNames.get(0));            
         } else if (theme != null) {
               File configFile = Paths.get(docBase, configDirectoryName, INI_SUBDIRECTORY, theme.toLowerCase() + ".ini").toFile();
               if (configFile.exists()) {
                   settings.setValue(Validator.SETTING_CONFIGFILE, configFile.getAbsolutePath());
                   log.debug("Config file by theme found in config directory: {}", configFile.getAbsolutePath());
+              } else {
+                  log.warn("Config file by theme NOT found in config directory: {}", configFile.getAbsolutePath());
               }
               
               File metaConfigFile = Paths.get(docBase, configDirectoryName, INI_SUBDIRECTORY, theme.toLowerCase() + "-meta.ini").toFile();

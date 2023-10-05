@@ -1,0 +1,42 @@
+FROM bellsoft/liberica-openjdk-centos:17.0.8 as builder
+
+COPY target/ilivalidatorws-exec.jar ./application.jar
+RUN java -Djarmode=layertools -jar application.jar extract
+
+FROM bellsoft/liberica-openjdk-centos:17.0.8
+
+ARG UID=1001
+
+# --system kann nicht verwendet werden, weil dann keine Repo-Verzeichnisse angelegt werden können.
+RUN adduser -u $UID ilivalidator 
+
+WORKDIR /docbase
+RUN chown $UID:0 . && \
+    chmod 0775 . && \
+    ls -la
+
+WORKDIR /work
+RUN chown $UID:0 . && \
+    chmod 0775 . && \
+    ls -la
+
+ENV HOME=/ilivalidator
+WORKDIR $HOME
+
+COPY --from=builder dependencies/ ./
+COPY --from=builder snapshot-dependencies/ ./
+COPY --from=builder spring-boot-loader/ ./
+COPY --from=builder application/ ./
+
+# COPY target/ilivalidatorws-exec.jar ./application.jar
+RUN chown -R $UID:0 . && \
+    chmod -R 0775 . && \
+    ls -la
+
+USER $UID
+EXPOSE 8080
+
+ENV LOG4J_FORMAT_MSG_NO_LOOKUPS=true
+ENTRYPOINT ["java", "-XX:+UseParallelGC", "-XX:MaxRAMPercentage=80.0", "org.springframework.boot.loader.JarLauncher", "--spring.profiles.active=docker"]
+
+#CMD java -XX:+UseParallelGC -XX:MaxRAMPercentage=80.0 -jar application.jar --spring.profiles.active=docker

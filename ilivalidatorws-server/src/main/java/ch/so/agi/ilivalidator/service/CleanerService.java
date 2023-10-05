@@ -38,7 +38,7 @@ public class CleanerService {
      * Verzeichnisse löschen, die älter als 60x60 Sekunden alt sind.
      */
     //@Scheduled(cron="0 0/2 * * * ?")
-    @Scheduled(cron="0 * * * * *")
+    @Scheduled(cron="0 */5 * * * *")
     private void cleanUp() {    
         // TODO: Geht das eleganter?
         // workDirectory ist der Bucket. Müsste anders gemacht werden.

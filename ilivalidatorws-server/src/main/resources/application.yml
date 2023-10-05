@@ -63,6 +63,10 @@ management:
           enabled: true
         readinessState:
           enabled: true
+#  endpoints:
+#    web:
+#      exposure:
+#        include: '*'
 
 # spring:
 #     profiles:

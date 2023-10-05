@@ -1,4 +1,4 @@
-FROM bellsoft/liberica-openjdk-centos:17.0.7
+FROM bellsoft/liberica-openjdk-centos:17.0.8
 
 ARG UID=1001
 
@@ -18,13 +18,15 @@ RUN chown $UID:0 . && \
 ENV HOME=/ilivalidator
 WORKDIR $HOME
 
-COPY target/ilivalidatorws-exec.jar ./application.jar
-RUN chown $UID:0 . && \
-    chmod 0775 . && \
+COPY target/lib/ ./lib
+COPY target/ilivalidatorws.jar ./application.jar
+
+RUN chown -R $UID:0 . && \
+    chmod -R 0775 . && \
     ls -la
 
 USER $UID
 EXPOSE 8080
 
 ENV LOG4J_FORMAT_MSG_NO_LOOKUPS=true
-CMD java -XX:+UseParallelGC -XX:MaxRAMPercentage=80.0 -jar application.jar --spring.profiles.active=docker
+ENTRYPOINT ["java", "-XX:+UseParallelGC", "-XX:MaxRAMPercentage=80.0", "-cp", "application.jar:./lib/*", "ch.so.agi.ilivalidator.Application", "--spring.profiles.active=docker"]

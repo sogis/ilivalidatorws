@@ -161,6 +161,8 @@
   <build>
     <finalName>ilivalidatorws</finalName>
     <plugins>
+
+
       <plugin>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-maven-plugin</artifactId>
@@ -172,7 +174,11 @@
           </execution>
         </executions>
         <configuration>
-          <skip>false</skip>
+          <!-- Kein Fat-Jar, weil sonst der Classpath für eine ilivalidator custom function nicht funktionert. 
+          Java meldet ".", die Funktioner erwartet eine Liste mit *.jar-Dateien. -->  
+          <skip>true</skip> 
+          <layout>JAR</layout>
+
         </configuration>
       </plugin>
       <plugin>
@@ -256,6 +262,18 @@
                   </artifactItems>
                 </configuration>
               </execution>
+              
+              <!-- Die Dependencies in das target/lib-Verzeichnis kopieren. Wir builden (momentan) keine Fat-Jar-Datei.  -->
+        <execution>
+            <phase>prepare-package</phase>
+            <goals>
+                <goal>copy-dependencies</goal>
+            </goals>
+            <configuration>
+                <outputDirectory>${project.build.directory}/lib</outputDirectory>
+            </configuration>
+        </execution>
+
             </executions>
           </plugin>
         </plugins>
