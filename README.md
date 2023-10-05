@@ -201,6 +201,8 @@ First Terminal:
 ```
 ./mvnw spring-boot:run -Penv-dev -pl *-server -am
 ```
+**ACHTUNG:** `<skip>true</skip>` auf `false` setzen, sonst beendet sich "run" gleich wieder.
+
 
 Second Terminal:
 ```

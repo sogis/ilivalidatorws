@@ -175,7 +175,8 @@
         </executions>
         <configuration>
           <!-- Kein Fat-Jar, weil sonst der Classpath für eine ilivalidator custom function nicht funktionert. 
-          Java meldet ".", die Funktioner erwartet eine Liste mit *.jar-Dateien. -->  
+          Java meldet ".", die Funktioner erwartet eine Liste mit *.jar-Dateien. 
+          Während dem Entwickeln muss aber auf skip=false umgestellt werden. -->  
           <skip>true</skip> 
           <layout>JAR</layout>
 
