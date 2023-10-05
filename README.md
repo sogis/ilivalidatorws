@@ -116,7 +116,7 @@ Ein Scheduler löscht jede Stunde (momentan hardcodiert) alle temporären Verzei
 
 ### Additional models
 
-Ilivalidator needs an ini file if you want to apply an additional model for your additional checks. The ini file must be all lower case, placed in the _src/main/resources/ini_ folder and named like the base model itself, e.g. `SO_Nutzungsplanung_20171118` -> _so_nutzungsplanung_20171118.ini_. The additional model can be placed in the _src/main/resources/ili_ folder or in any model repository that ilivalidator finds out-of-the-box. The model `GeoW_FunctionsExt` - with the some custom functions definitions - is also placed here since it is not available in any repository and the original is an ili24 model.
+Ilivalidator needs an ini file if you want to apply an additional model for your additional checks. The ini file must be all lower case, placed in the _src/main/resources/ini_ folder and named like the base model itself, e.g. `SO_Nutzungsplanung_20171118` -> _so_nutzungsplanung_20171118.ini_. The additional model can be placed in the _src/main/resources/ili_ folder or in any model repository that ilivalidator finds out-of-the-box. The model `GeoW_FunctionsExt` - which is needed by some validation models - is placed in our own repository (and changed from ili24 to ili23).
 
 You can also upload and ini file and model file together with the transfer file you want to validate. 
 
