@@ -272,8 +272,8 @@ public abstract class ApiTests {
         assertTrue(logFileContents.contains("Error: line 140: SO_Nutzungsplanung_20171118.Nutzungsplanung.Typ_Ueberlagernd_Flaeche: tid 0723a0c8-46e4-4e4f-aba4-c75e90bece14: Attributwert Verbindlichkeit ist nicht identisch zum Objektkatalog: 'orientierend' - '6110'"));
         assertTrue(logFileContents.contains("Dokument 'https://geo.so.ch/docs/ch.so.arp.zonenplaene/Zonenplaene_pdf/24-Brunnenthal/Reglemente/024_BZR.pdf' wurde nicht gefunden"));
         assertTrue(logFileContents.contains("Error: SO_Nutzungsplanung_20171118.Nutzungsplanung.Ueberlagernd_Flaeche: tid 7478a32c-45d6-4b3f-8507-0b9f4bd308bf/Geometrie[1]: Intersection coord1 (2600228.240, 1217472.518), tids 7478a32c-45d6-4b3f-8507-0b9f4bd308bf/Geometrie[1], 9b8a1966-1482-4b1f-b576-968f4246e80a/Geometrie[1]"));
-        assertTrue(logFileContents.contains("Error: Set Constraint SO_Nutzungsplanung_20171118_Validierung_20211006.Nutzungsplanung_Validierung.v_Ueberlagernd_Flaeche.laermempfindlichkeitsAreaCheck is not true"));
-        assertTrue(logFileContents.contains("Info: validate set constraint SO_Nutzungsplanung_20171118_Validierung_20211006.Rechtsvorschriften_Validierung.v_HinweisWeitereDokumente.isValidDocumentsCycle..."));
+        assertTrue(logFileContents.contains("Error: Set Constraint SO_Nutzungsplanung_20171118_Validierung_20231005.Nutzungsplanung_Validierung.v_Ueberlagernd_Flaeche.laermempfindlichkeitsAreaCheck is not true"));
+        assertTrue(logFileContents.contains("Info: validate set constraint SO_Nutzungsplanung_20171118_Validierung_20231005.Rechtsvorschriften_Validierung.v_HinweisWeitereDokumente.isValidDocumentsCycle..."));
         assertTrue(logFileContents.contains("Error: line 61: SO_Nutzungsplanung_20171118.Rechtsvorschriften.HinweisWeitereDokumente: tid 6: self loop found: 95efebb8-24df-4462-9af1-15500e341f04"));       
         assertTrue(logFileContents.contains("Info: ...validation failed"));
     }
