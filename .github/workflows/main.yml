@@ -38,7 +38,7 @@ jobs:
 
       - name: Test and build Jar
         run: |
-          ./mvnw test -DexcludedGroups="docker"
+          ./mvnw clean test -DexcludedGroups="docker"
           ./mvnw -Penv-prod clean package -DexcludedGroups="docker"
           ls -la ilivalidatorws-server/target
 

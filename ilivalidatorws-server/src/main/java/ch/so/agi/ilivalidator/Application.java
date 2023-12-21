@@ -98,7 +98,9 @@ public class Application extends SpringBootServletInitializer {
                         + "ch.geowerkstatt.ilivalidator.extensions.functions.GetLengthIoxPlugin,"
                         + "ch.geowerkstatt.ilivalidator.extensions.functions.GetInnerRingsCountIoxPlugin,"
                         + "ch.geowerkstatt.ilivalidator.extensions.functions.GetInGroupsIoxPlugin,"
-                        + "ch.geowerkstatt.ilivalidator.extensions.functions.IsInsideExternalDatasetIoxPlugin");
+                        + "ch.geowerkstatt.ilivalidator.extensions.functions.IsInsideExternalDatasetIoxPlugin,"
+                        + "ch.geowerkstatt.ilivalidator.extensions.functions.IsInsideExternalDatasetResourceIoxPlugin,"
+                        + "ch.geowerkstatt.ilivalidator.extensions.functions.PolylinesOverlapIoxPlugin");
     }
     
     @ConditionalOnProperty(name = "app.storageService", havingValue = "local", matchIfMissing = false)

@@ -14,6 +14,26 @@
   <properties>
     <java.version>17</java.version>
   </properties>
+<dependencyManagement>
+   <dependencies>
+      <dependency>
+         <groupId>ch.interlis</groupId>
+         <artifactId>ili2c-tool</artifactId>
+         <version>5.3.2</version>
+      </dependency>
+      <dependency>
+         <groupId>ch.interlis</groupId>
+         <artifactId>ili2c-core</artifactId>
+         <version>5.3.2</version>
+      </dependency>
+    <dependency>
+      <groupId>ch.interlis</groupId>
+      <artifactId>iox-ili</artifactId>
+      <version>1.21.18</version>
+    </dependency>
+   </dependencies>
+</dependencyManagement>
+
   <dependencies>
     <dependency>
       <groupId>${project.groupId}</groupId>
@@ -178,10 +198,12 @@
           </execution>
         </executions>
         <configuration>
-          <!-- Kein Fat-Jar, weil sonst der Classpath für eine ilivalidator custom function nicht funktionert. 
+          <!-- Kein Fatjar, weil sonst der Classpath für eine ilivalidator custom function nicht funktionert. 
           Java meldet ".", die Funktion erwartet eine Liste mit *.jar-Dateien. 
-          Während dem Entwickeln muss aber auf skip=false umgestellt werden. -->  
-          <skip>true</skip> 
+          Während dem Entwickeln muss aber auf skip=false umgestellt werden. 
+          
+          2023-12-21: Fatjar funktioniert wieder mit neuer Funktion. -->  
+          <skip>false</skip> 
           <layout>JAR</layout>
 
         </configuration>
