@@ -57,13 +57,13 @@ public abstract class ResourcesTests {
     public void isIliAvailable() throws Exception {
         String serverUrl = "http://localhost:"+port+CONFIG_ENDPOINT+"ili/";
 
-        URL logFileUrl = new URL(serverUrl + "VSADSSMINI_2020_LV95_Validierung_IPW_20230207.ili");
+        URL logFileUrl = new URL(serverUrl + "VSADSSMINI_2020_LV95_Validierung_IPW_20230605.ili");
 
         String fileContents = null;
         try (InputStream in = logFileUrl.openStream()) {
             BufferedReader reader = new BufferedReader(new InputStreamReader(in));
             fileContents = reader.lines().collect(Collectors.joining(System.lineSeparator()));
         }
-        assertTrue(fileContents.contains("CONTRACTED MODEL VSADSSMINI_2020_LV95_Validierung_IPW_20230207"));
+        assertTrue(fileContents.contains("CONTRACTED MODEL VSADSSMINI_2020_LV95_Validierung_IPW_20230605"));
     }
 }
