@@ -43,27 +43,27 @@ public abstract class ResourcesTests {
     public void isIniAvailable() throws Exception {
         String serverUrl = "http://localhost:"+port+CONFIG_ENDPOINT+"ini/";
 
-        URL logFileUrl = new URL(serverUrl + "nutzungsplanung.ini");
+        URL logFileUrl = new URL(serverUrl + "gb2av.ini");
 
         String fileContents = null;
         try (InputStream in = logFileUrl.openStream()) {
             BufferedReader reader = new BufferedReader(new InputStreamReader(in));
             fileContents = reader.lines().collect(Collectors.joining(System.lineSeparator()));
         }
-        assertTrue(fileContents.contains("additionalModels=\"SO_Nutzungsplanung_20171118_Validierung_20231101\""));
+        assertTrue(fileContents.contains("multiplicity=\"warning\""));
     }
     
     @Test
     public void isIliAvailable() throws Exception {
         String serverUrl = "http://localhost:"+port+CONFIG_ENDPOINT+"ili/";
 
-        URL logFileUrl = new URL(serverUrl + "VSADSSMINI_2020_LV95_Validierung_IPW_20230605.ili");
+        URL logFileUrl = new URL(serverUrl + "SO_AGI_MOpublic_20190424_Validierung_20230825.ili");
 
         String fileContents = null;
         try (InputStream in = logFileUrl.openStream()) {
             BufferedReader reader = new BufferedReader(new InputStreamReader(in));
             fileContents = reader.lines().collect(Collectors.joining(System.lineSeparator()));
         }
-        assertTrue(fileContents.contains("CONTRACTED MODEL VSADSSMINI_2020_LV95_Validierung_IPW_20230605"));
+        assertTrue(fileContents.contains("CONTRACTED MODEL SO_AGI_MOpublic_20190424_Validierung_20230825 (de)"));
     }
 }

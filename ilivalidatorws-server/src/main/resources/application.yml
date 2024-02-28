@@ -109,3 +109,4 @@ app:
   #storageService: ${STORAGE_SERVICE:s3}
   awsAccessKey: ${AWS_ACCESS_KEY_ID}
   awsSecretKey: ${AWS_SECRET_ACCESS_KEY}
+  preferredIliRepo: ${PREFERRED_ILI_REPO:https://geo.so.ch/models}

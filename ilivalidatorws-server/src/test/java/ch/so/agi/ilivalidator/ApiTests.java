@@ -225,6 +225,7 @@ public abstract class ApiTests {
         assertTrue(logFileContents.contains("Info: ...validation done"));
     } 
 
+    // needs external ini file
     @Test
     public void validation_Fail_CustomFunctions() throws Exception {
         String serverUrl = "http://localhost:"+port+REST_ENDPOINT;
@@ -265,7 +266,7 @@ public abstract class ApiTests {
             BufferedReader reader = new BufferedReader(new InputStreamReader(in));
             logFileContents = reader.lines().collect(Collectors.joining(System.lineSeparator()));
         }
-        assertTrue(logFileContents.contains("nutzungsplanung.ini"));
+        assertTrue(logFileContents.contains("ilidata:SO_Nutzungsplanung_20171118_20231101-meta"));
         assertTrue(logFileContents.contains("Warning: line 5: SO_Nutzungsplanung_20171118.Rechtsvorschriften.Dokument: tid d3c20374-f6c5-48f9-8e1e-232b87a9d80a: invalid format of INTERLIS.URI value <34-Messen/Entscheide/34-36_45-E.pdf> in attribute TextImWeb"));
         assertTrue(logFileContents.contains("Error: line 61: SO_Nutzungsplanung_20171118.Rechtsvorschriften.HinweisWeitereDokumente: tid 6: Association SO_Nutzungsplanung_20171118.Rechtsvorschriften.HinweisWeitereDokumente must not have an OID (6)"));
         assertTrue(logFileContents.contains("Error: line 412: SO_Nutzungsplanung_20171118.Nutzungsplanung.Grundnutzung: tid 2d285daf-a5ab-4106-a453-58eef2e921ab: duplicate coord at (2599932.281, 1216063.38, NaN)"));

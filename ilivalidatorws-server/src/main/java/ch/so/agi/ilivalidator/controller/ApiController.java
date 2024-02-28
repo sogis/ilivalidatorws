@@ -29,8 +29,10 @@ import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -87,24 +89,12 @@ public class ApiController {
     @GetMapping("/api/profiles")
     public ResponseEntity<?> getProfiles() throws IOException {
         
-        File configDirectory = Paths.get(docBase, configDirectoryName, "ini").toFile();
-        if (!configDirectory.exists()) {
-            return ResponseEntity.noContent().build();
-        }
+        Map<String,String> themes = Utils.themes();
+        List<String> themesList = new ArrayList<>(themes.keySet());
+        Collections.sort(themesList);
         
-        List<String> iniFileNames = new ArrayList<String>();
-        try (Stream<Path> walk = Files.walk(configDirectory.toPath(), 1)) {
-            iniFileNames = walk
-                    .filter(p -> !Files.isDirectory(p))
-                    .filter(p -> p.toString().endsWith(".ini"))
-                    .filter(p -> !p.toString().endsWith("-meta.ini"))
-                    .map(p -> {
-                        return p.getFileName().toString();
-                    })
-                    .collect(Collectors.toList());        
-        }        
         HashMap<String, List<String>> profiles = new HashMap<>();
-        profiles.put("profiles", iniFileNames);
+        profiles.put("profiles", themesList);
         
         return ResponseEntity.ok().body(profiles);
     }
@@ -120,7 +110,7 @@ public class ApiController {
 
         log.debug("<{}> Selected theme: {}", jobId, theme);
         
-        // Null jobrunr nicht übergeben werden?
+        // Null-String kann jobrunr nicht übergeben werden?
         String themeString;
         if (theme == null) {
             themeString = "";
@@ -181,7 +171,8 @@ public class ApiController {
             log.debug("<{}> Number of uploaded ili files: {}", jobId, iliFiles.size());
             log.debug("<{}> Number of uploaded config files: {}", jobId, configFiles.size());
                         
-            jobScheduler.enqueue(jobIdUuid, () -> ilivalidatorService.validate(dataFiles.toArray(new Path[0]), iliFiles.toArray(new Path[0]), configFiles.toArray(new Path[0]), themeString));
+            jobScheduler.enqueue(jobIdUuid, () -> ilivalidatorService.validate(dataFiles.toArray(new Path[0]),
+                    iliFiles.toArray(new Path[0]), configFiles.toArray(new Path[0]), themeString));
             log.debug("<{}> Job is being queued", jobId);
         } else if (validationType == ValidationType.CSV) {
             for (Path path : uploadedFiles) {

@@ -107,6 +107,7 @@ Die allermeisten Optionen sind via Umgebungsvariablen exponiert und somit verän
 | `HIKARI_MAX_POOL_SIZE` | Grösse des DB-Connections-Pools | `10` |
 | `AWS_ACCESS_KEY_ID` | AWS Access Key |  |
 | `AWS_SECRET_ACCESS_KEY` | AWS Secret Key |  |
+| `PREFERRED_ILI_REPO` | Modell- und Datenrepository, das als erstes externes durchsucht wird | `https://geo.so.ch/models` |
 
 Ein `docker-run`-Befehl könnte circa so aussehen:
 

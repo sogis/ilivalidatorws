@@ -9,6 +9,7 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,6 +25,7 @@ import ch.interlis.iox.IoxException;
 import ch.interlis.iox.IoxReader;
 import ch.interlis.iox_j.EndTransferEvent;
 import ch.interlis.iox_j.StartBasketEvent;
+import ch.so.agi.ilivalidator.Utils;
 
 import org.apache.commons.io.FilenameUtils;
 import org.interlis2.validator.Validator;
@@ -50,6 +52,9 @@ public class IlivalidatorService {
     @Value("${app.folderPrefix}")
     private String folderPrefix;
     
+    @Value("${app.preferredIliRepo}")
+    private String preferredIliRepo;    
+    
     public IlivalidatorService(StorageService storageService) {
         this.storageService = storageService;
     }
@@ -69,7 +74,6 @@ public class IlivalidatorService {
     @Job(name = "Ilivalidator", retries=0)
     public synchronized boolean validate(Path[] transferFiles, Path[] modelFiles,
             Path[] configFiles, String theme) throws IoxException, IOException {
-        
         // Wenn wir nicht das "local"-Filesystem verwenden, müssen die Daten zuerst lokal
         // verfügbar gemacht werden, weil ilivalidator nur mit "File" und nicht mit "Path" umgehen kann.
         Path tmpDirectory = Files.createTempDirectory(Paths.get(System.getProperty("java.io.tmpdir")), folderPrefix);            
@@ -132,7 +136,7 @@ public class IlivalidatorService {
         // Validator.SETTING_DEFAULT_ILIDIRS
         // bereits berücksichtigt.
         File builtinIliFiles = Paths.get(docBase, configDirectoryName, ILI_SUBDIRECTORY).toFile();
-        settingIlidirs = builtinIliFiles.getAbsolutePath() + ";" + settingIlidirs;
+        settingIlidirs = builtinIliFiles.getAbsolutePath() + ";" + preferredIliRepo + ";" + settingIlidirs;
         settings.setValue(Validator.SETTING_ILIDIRS, settingIlidirs);
 
         log.debug("Setting ilidirs: {}", settingIlidirs);
@@ -175,21 +179,22 @@ public class IlivalidatorService {
             // überschreiben.
             settings.setValue(Validator.SETTING_ALL_OBJECTS_ACCESSIBLE, null);
             log.debug("Uploaded config file used: {}", configFileNames.get(0));            
-        } else if (theme != null) {
-              File configFile = Paths.get(docBase, configDirectoryName, INI_SUBDIRECTORY, theme.toLowerCase() + ".ini").toFile();
-              if (configFile.exists()) {
-                  settings.setValue(Validator.SETTING_CONFIGFILE, configFile.getAbsolutePath());
-                  log.debug("Config file by theme found in config directory: {}", configFile.getAbsolutePath());
-              } else {
-                  log.warn("Config file by theme NOT found in config directory: {}", configFile.getAbsolutePath());
-              }
-              
-              File metaConfigFile = Paths.get(docBase, configDirectoryName, INI_SUBDIRECTORY, theme.toLowerCase() + "-meta.ini").toFile();
-              if (metaConfigFile.exists()) {
-                  settings.setValue(Validator.SETTING_META_CONFIGFILE, metaConfigFile.getAbsolutePath());
-                  log.debug("Meta config file by theme found in config directory: {}", metaConfigFile.getAbsolutePath());
-              }
-
+        } else if (theme != null && !theme.isBlank()) {            
+            Map<String,String> themes = Utils.themes();
+            String themeConfig = themes.get(theme);
+            if (themeConfig.startsWith("ilidata:")) {
+                settings.setValue(Validator.SETTING_META_CONFIGFILE, themeConfig);                
+            } else  {
+                File metaConfigFile = Paths
+                        .get(docBase, configDirectoryName, INI_SUBDIRECTORY, theme.toLowerCase() + "-meta.ini")
+                        .toFile();
+                if (metaConfigFile.exists()) {
+                    settings.setValue(Validator.SETTING_META_CONFIGFILE, metaConfigFile.getAbsolutePath());
+                    log.debug("Meta config file by theme found in config directory: {}", metaConfigFile.getAbsolutePath());
+                } else {
+                    log.warn("Meta config file by theme NOT found in config directory: {}", metaConfigFile.getAbsolutePath());                    
+                }               
+            }
         } else {
               for (String transferFileName : transferFileNames) {
                   String modelName = getModelNameFromTransferFile(transferFileName);

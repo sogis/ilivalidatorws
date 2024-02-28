@@ -92,7 +92,6 @@ public class App implements EntryPoint {
 
         if (pathname.length() == 1) {
             pathname = "";
-            console.log("length 1");
         } 
 
         String requestUrl = protocol + "//" + host + pathname + API_PROFILES_ENDPOINT;
@@ -174,7 +173,7 @@ public class App implements EntryPoint {
         for (String validationProfile : validationProfiles) {
             HTMLOptionElement option = (HTMLOptionElement) document.createElement("option");        
             option.text = validationProfile;
-            option.value = validationProfile.substring(0, validationProfile.length()-4);
+            option.value = validationProfile;//.substring(0, validationProfile.length()-4);
             options.add(option);            
         }
         
