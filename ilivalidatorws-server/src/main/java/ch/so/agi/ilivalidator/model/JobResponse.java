@@ -12,5 +12,6 @@ public record JobResponse(
             String message,
             String validationStatus,
             String logFileLocation,
-            String xtfLogFileLocation
+            String xtfLogFileLocation,
+            String csvLogFileLocation
         ) {}

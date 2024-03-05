@@ -124,6 +124,7 @@ public class IlivalidatorService {
         Settings settings = new Settings();
         settings.setValue(Validator.SETTING_LOGFILE, logFileName);
         settings.setValue(Validator.SETTING_XTFLOG, logFileName + ".xtf");
+        settings.setValue(Validator.SETTING_CSVLOG, logFileName + ".csv");
 
         String settingIlidirs = Validator.SETTING_DEFAULT_ILIDIRS;
 

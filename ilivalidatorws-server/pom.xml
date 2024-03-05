@@ -19,17 +19,17 @@
       <dependency>
          <groupId>ch.interlis</groupId>
          <artifactId>ili2c-tool</artifactId>
-         <version>5.3.2</version>
+         <version>5.4.1</version>
       </dependency>
       <dependency>
          <groupId>ch.interlis</groupId>
          <artifactId>ili2c-core</artifactId>
-         <version>5.3.2</version>
+         <version>5.4.1</version>
       </dependency>
     <dependency>
       <groupId>ch.interlis</groupId>
       <artifactId>iox-ili</artifactId>
-      <version>1.21.18</version>
+      <version>1.22.1</version>
     </dependency>
    </dependencies>
 </dependencyManagement>
@@ -91,7 +91,7 @@
 <dependency>
     <groupId>ch.interlis</groupId>
     <artifactId>ilivalidator</artifactId>
-    <version>1.13.3</version>
+    <version>1.14.1</version>
 </dependency>
 <dependency>
     <groupId>io.github.sogis</groupId>

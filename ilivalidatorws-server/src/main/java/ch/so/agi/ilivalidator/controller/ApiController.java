@@ -212,6 +212,7 @@ public class ApiController {
                     JOB_DELETED,
                     null, 
                     null, 
+                    null,
                     null
                     );
             return ResponseEntity.ok().body(jobResponse);
@@ -223,6 +224,7 @@ public class ApiController {
                     JOB_NOT_FOUND,
                     null, 
                     null, 
+                    null,
                     null
                     );
             return ResponseEntity.badRequest().body(jobResponse);
@@ -238,10 +240,12 @@ public class ApiController {
 
             String logFileLocation = null;
             String xtfLogFileLocation = null;
+            String csvLogFileLocation = null;
             String validationResult = null;
             if (job.getJobState().getName().equals(StateName.SUCCEEDED)) {
                 logFileLocation = Utils.fixUrl(getHost() + "/" + LOG_ENDPOINT + "/" + folderPrefix + jobId + "/" + jobId + ".log");
                 xtfLogFileLocation = logFileLocation + ".xtf"; 
+                csvLogFileLocation = logFileLocation + ".csv"; 
                 try {
                     // JobResult nur bei Pro-Version. Darum handgestrickt.
                     String content = Files.readString(logFile);
@@ -270,7 +274,8 @@ public class ApiController {
                     message,
                     validationResult, 
                     logFileLocation, 
-                    xtfLogFileLocation
+                    xtfLogFileLocation,
+                    csvLogFileLocation
                     );
             
             if (jobResponse.status().equals(StateName.SUCCEEDED.toString())) {
@@ -290,6 +295,7 @@ public class ApiController {
                     JOB_NOT_FOUND,
                     null, 
                     null, 
+                    null,
                     null
                     );
             return ResponseEntity.badRequest().body(jobResponse);
