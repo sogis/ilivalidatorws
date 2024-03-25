@@ -108,6 +108,9 @@ public class CsvValidatorService {
             throw new IllegalArgumentException("You must provide an config file.");
         }
         
+        // TODO: download ini from ilidata
+        // https://github.com/claeis/ilivalidator/blob/8b7398404cf08aa917bb688444649179deb7b36b/src/org/interlis2/validator/Validator.java#L195C46-L195C80
+        
         log.debug("Uploaded config file used: {}", configFileNames.get(0));
         ValidationConfig validationConfig = IniFileReader.readFile(new File(configFileNames.get(0)));
                 

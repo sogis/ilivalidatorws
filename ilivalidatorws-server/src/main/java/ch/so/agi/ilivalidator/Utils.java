@@ -21,6 +21,7 @@ public class Utils {
         themes.put("nutzungsplanung", "ilidata:SO_Nutzungsplanung_20171118_20231101-meta");
         themes.put("gb2av", "gb2av.ini");
         themes.put("mopublic", "mopublic.ini");
+//        themes.put("hba_grundstuecke", "ilidata:)
         return themes;
     }
 }
