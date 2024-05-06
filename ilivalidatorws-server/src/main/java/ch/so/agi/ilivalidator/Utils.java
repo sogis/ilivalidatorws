@@ -19,6 +19,7 @@ public class Utils {
         themes.put("ipw_2020_1", "ilidata:VSADSSMINI_2020_1_LV95_IPW_20230605-meta");
         themes.put("drainagen", "ilidata:VSADSSMINI_2020_LV95_Drainage_20230731-meta");
         themes.put("nutzungsplanung", "ilidata:SO_Nutzungsplanung_20171118_20231101-meta");
+        themes.put("naturgefahren", "ilidata:SO_AFU_Naturgefahren_20240515-web-meta");
         themes.put("gb2av", "gb2av.ini");
         themes.put("mopublic", "mopublic.ini");
 //        themes.put("hba_grundstuecke", "ilidata:)

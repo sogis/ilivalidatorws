@@ -1,5 +1,6 @@
 package ch.so.agi.ilivalidator;
 
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -225,6 +226,53 @@ public abstract class ApiTests {
         assertTrue(logFileContents.contains("Info: ...validation done"));
     } 
 
+    // meta-ini aus Repo
+    @Test
+    public void validation_Ok_Naturgefahren() throws Exception {
+        String serverUrl = "http://localhost:"+port+REST_ENDPOINT;
+
+        MultiValueMap<String, Object> parameters = new LinkedMultiValueMap<String, Object>();
+        parameters.add("files", new FileSystemResource("src/test/data/NGK_SO_Testbeddata.xtf"));
+        parameters.add("theme", "naturgefahren");
+        
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Content-Type", "multipart/form-data");
+        headers.set("Accept", "text/plain");
+
+        // Datei hochladen und Response-Status-Code auswerten
+        ResponseEntity<String> postResponse = restTemplate.postForEntity(
+                serverUrl, new HttpEntity<MultiValueMap<String, Object>>(parameters, headers), String.class);
+
+        assertEquals(202, postResponse.getStatusCode().value());
+
+        // Warten, bis die Validierung durch ist (=SUCCEEDED)
+        String operationLocation = postResponse.getHeaders().toSingleValueMap().get(OPERATION_LOCATION_HEADER);
+        
+        await()
+            .with().pollDelay(RESULT_POLL_DELAY, TimeUnit.SECONDS).pollInterval(RESULT_POLL_INTERVAL, TimeUnit.SECONDS)
+            .and()
+            .with().atMost(RESULT_WAIT, TimeUnit.MINUTES)
+            .until(new MyCallable(operationLocation, restTemplate));
+
+        // Logfile herunterladen und auswerten
+        ResponseEntity<JobResponse> jobResponse = restTemplate.getForEntity(operationLocation, JobResponse.class);        
+        
+        assertEquals("SUCCEEDED", jobResponse.getBody().status());
+        assertEquals("SUCCEEDED", jobResponse.getBody().validationStatus());
+
+        URL logFileUrl = new URL(jobResponse.getBody().logFileLocation());
+
+        String logFileContents = null;
+        try (InputStream in = logFileUrl.openStream()) {
+            BufferedReader reader = new BufferedReader(new InputStreamReader(in));
+            logFileContents = reader.lines().collect(Collectors.joining(System.lineSeparator()));
+        }
+        assertTrue(logFileContents.contains("metaConfigFile <ilidata:SO_AFU_Naturgefahren_20240515-web-meta>"));
+        assertTrue(logFileContents.contains("modelNames <SO_AFU_Naturgefahren_20240515>"));
+        assertTrue(logFileContents.contains("Info: ...validation done"));
+        assertFalse(logFileContents.contains("is not yet implemented"));
+    }
+    
     // needs external ini file
     @Test
     public void validation_Fail_CustomFunctions() throws Exception {
@@ -279,7 +327,8 @@ public abstract class ApiTests {
         assertTrue(logFileContents.contains("Info: ...validation failed"));
     }
     
-    // Eine fehlerfreie CSV-Datei wird geprüft. Es wird eine Config-Datei mit hochgeladen. 
+    // Eine fehlerfreie CSV-Datei wird geprüft. Es wird eine Config-Datei mit hochgeladen.
+    @Disabled("Es gibt ein neues Modell.")
     @Test
     public void validation_Ok_CsvFile_ConfigFile() throws Exception {
         String serverUrl = "http://localhost:"+port+REST_ENDPOINT;
@@ -325,6 +374,7 @@ public abstract class ApiTests {
     } 
 
     // Eine CSV-Datei mit Fehlern wird geprüft. Es wird eine Config-Datei mit hochgeladen. 
+    @Disabled("Es gibt ein neues Modell.")
     @Test
     public void validation_Fail_CsvFile_ConfigFile() throws Exception {
         String serverUrl = "http://localhost:"+port+REST_ENDPOINT;
@@ -372,6 +422,7 @@ public abstract class ApiTests {
     } 
 
     // Eine fehlerfreie CSV-Datei wird geprüft. Es wird eine Config-Datei und Modell mit hochgeladen. 
+    @Disabled("Es gibt ein neues Modell.")
     @Test
     public void validation_Ok_CsvFile_ConfigFile_ModelFile() throws Exception {
         String serverUrl = "http://localhost:"+port+REST_ENDPOINT;
