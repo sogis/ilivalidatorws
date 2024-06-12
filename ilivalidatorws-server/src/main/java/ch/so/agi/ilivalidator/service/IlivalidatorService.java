@@ -232,6 +232,12 @@ public class IlivalidatorService {
                 Files.delete(Paths.get(configFileName));
             }
         }
+        // Da das tmp-Verzeichnis immer erstellt wird (auch für lokal),
+        // muss es auch immer gelöscht werden. Hier ist es immer 
+        // leer und kann gelöscht werden.
+        System.err.println("tmpDirectory: " + tmpDirectory);
+        Files.delete(tmpDirectory);
+        
         return valid;
     }
 
