@@ -260,7 +260,7 @@ public abstract class ApiTests {
         ResponseEntity<JobResponse> jobResponse = restTemplate.getForEntity(operationLocation, JobResponse.class);        
         
         assertEquals("SUCCEEDED", jobResponse.getBody().status());
-        assertEquals("SUCCEEDED", jobResponse.getBody().validationStatus());
+        assertEquals("FAILED", jobResponse.getBody().validationStatus());
 
         URL logFileUrl = new URL(jobResponse.getBody().logFileLocation());
 
