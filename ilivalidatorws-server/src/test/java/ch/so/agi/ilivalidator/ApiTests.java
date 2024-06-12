@@ -227,8 +227,10 @@ public abstract class ApiTests {
     } 
 
     // meta-ini aus Repo
+    // War früher Ok. Anscheinend hat man an der Konfig / am Modell was
+    // geändert.
     @Test
-    public void validation_Ok_Naturgefahren() throws Exception {
+    public void validation_Fail_Naturgefahren() throws Exception {
         String serverUrl = "http://localhost:"+port+REST_ENDPOINT;
 
         MultiValueMap<String, Object> parameters = new LinkedMultiValueMap<String, Object>();
@@ -269,7 +271,8 @@ public abstract class ApiTests {
         }
         assertTrue(logFileContents.contains("metaConfigFile <ilidata:SO_AFU_Naturgefahren_20240515-web-meta>"));
         assertTrue(logFileContents.contains("modelNames <SO_AFU_Naturgefahren_20240515>"));
-        assertTrue(logFileContents.contains("Info: ...validation done"));
+        assertTrue(logFileContents.contains("Der Befund Jaehrlichkeit muss einem Teilauftrag des Hauptprozess-Typs 'Sturz' zugeordnet sein"));
+        assertTrue(logFileContents.contains("Info: ...validation failed"));
         assertFalse(logFileContents.contains("is not yet implemented"));
     }
     
