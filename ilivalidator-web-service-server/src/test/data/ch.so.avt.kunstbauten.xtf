@@ -1,0 +1,8 @@
+<?xml version='1.0' encoding='UTF-8'?><TRANSFER xmlns="http://www.interlis.ch/INTERLIS2.3">
+<HEADERSECTION SENDER="ili2pg-4.9.1-edeb4647bbdea52480a419b5aa605d425fcbd5df" VERSION="2.3"><MODELS><MODEL NAME="SO_AVT_Kunstbauten_Publikation_20220207" VERSION="2022-02-07" URI="http://geo.so.ch/models/AVT/"/></MODELS></HEADERSECTION>
+<DATASECTION>
+<SO_AVT_Kunstbauten_Publikation_20220207.Kunstbauten BID="SO_AVT_Kunstbauten_Publikation_20220207.Kunstbauten">
+<SO_AVT_Kunstbauten_Publikation_20220207.Kunstbauten.Kunstbaute TID="f0cc0e37-9db7-492e-8ad7-9df33585939e"><Point><COORD><C1>2638077.596</C1><C2>1244943.186</C2></COORD></Point><Name>PU Härdli</Name><KubaID>14/084/3</KubaID><Bezugspunkt>5000 - 508 - 80</Bezugspunkt><Eigentuemer>Solothurn</Eigentuemer><Gemeinde>Dulliken</Gemeinde><Typ>Brücke mit Rahmentragwerk</Typ><Erhaltungspflichtiger>Solothurn</Erhaltungspflichtiger><Baujahr>1966</Baujahr><Laenge>26.00</Laenge><Breite>3.60</Breite><Kategorie>4</Kategorie><Kategorie_Txt>Querungen</Kategorie_Txt><Link>https://so.ch/fileadmin/internet/bjd/bjd-avt/img/Fotos_Kunstbauten_Durchlaesse/P1020220.JPG</Link></SO_AVT_Kunstbauten_Publikation_20220207.Kunstbauten.Kunstbaute>
+</SO_AVT_Kunstbauten_Publikation_20220207.Kunstbauten>
+</DATASECTION>
+</TRANSFER>

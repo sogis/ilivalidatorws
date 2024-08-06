@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module>
+  <inherits name="com.google.gwt.core.Core" />
+  <inherits name="com.google.gwt.user.User" />
+  <inherits name="com.google.gwt.json.JSON" />
+  <inherits name="com.google.gwt.i18n.I18N" />
+
+  <inherits name="org.jboss.elemento.Core"/>
+
+  <extend-property name="locale" values="de_CH" />
+  <set-property name="locale" value="de_CH" />
+
+  <source path="" />
+
+  <entry-point class="ch.so.agi.ilivalidator.App" />
+
+  <!-- Only support recent browsers -->
+  <!--https://groups.google.com/g/google-web-toolkit/c/lgJBc_GymfM?pli=1-->
+  <set-property name="user.agent" value="gecko1_8,safari" />
+
+  <add-linker name="direct_install" />
+</module>

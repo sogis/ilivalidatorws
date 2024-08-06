@@ -1,0 +1,38 @@
+html, body {
+	/*font-family: apple-system, "system-ui", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;*/
+}
+
+
+body, html {
+    /*height: 100%;*/
+    margin: 0;
+}
+
+.container {
+    /*height: 100%;*/
+    margin-top: 200px;
+}
+
+#protocol-container {
+	margin-top: 50px;
+	padding: 10px;
+	background-color: white;
+	border: var(--bs-border-width) solid var(--bs-border-color);
+	border-radius: var(--bs-border-radius);
+	display: none;
+}
+
+a.badge-link {
+    color: #333333;  
+    text-decoration: none !important;       
+}
+
+a.badge-link:hover {
+    color: #333333; 
+    text-decoration: none !important;                
+}
+
+a.badge-link:visited {
+    color: #333333;  
+    text-decoration: none !important;              
+}

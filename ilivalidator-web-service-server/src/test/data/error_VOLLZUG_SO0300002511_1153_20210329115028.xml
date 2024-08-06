@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<TRANSFER xmlns="http://www.interlis.ch/INTERLIS2.2">
+    <HEADERSECTION VERSION="2.2" SENDER="Capitastra">
+        <ALIAS/>
+    </HEADERSECTION>
+    <DATASECTION>
+        <GB2AV.Vollzugsgegenstaende BID="x5C32C2EF084A4384829A3053FDCE55D4">
+            <GB2AV.Vollzugsgegenstaende.Vollzugsgegenstand TID="xBE045737642B43F1A5249C51E9BFDBEA">
+                <Status>Eintrag</Status>
+                <GrundbuchEintrag>2021-03-29</GrundbuchEintrag>
+                <TagebuchEintrag>2021-03-23</TagebuchEintrag>
+                <TagebuchBeleg>010-2021/1270/0</TagebuchBeleg>
+                <Mutationsnummer>
+                    <GB2AV.MutationsNummer>
+                        <Nummer>1153</Nummer>
+                        <NBIdent>XXXXSO0300002511</NBIdent>
+                    </GB2AV.MutationsNummer>
+                </Mutationsnummer>
+            </GB2AV.Vollzugsgegenstaende.Vollzugsgegenstand>
+        </GB2AV.Vollzugsgegenstaende>
+    </DATASECTION>
+</TRANSFER>
