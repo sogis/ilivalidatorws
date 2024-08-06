@@ -59,6 +59,7 @@ Mit Docker wird die Anwendung mit einem docker-Profil gestartet (siehe Dockerfil
 
 | Name | Beschreibung | Standard |
 |-----|-----|-----|
+| `TZ` | Zeitzone des Dockercontainers. Z.B. `Europe/Zurich` | |
 | `MAX_FILE_SIZE` | Die maximale Grösse einer Datei, die hochgeladen werden kann in Megabyte. | `200` |
 | `LOG_LEVEL` | Das Logging-Level des Spring Boot Frameworks. | `INFO` |
 | `LOG_LEVEL_DB_CONNECTION_POOL` | Das Logging-Level des DB-Connection-Poolsocket. | `INFO` |
