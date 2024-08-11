@@ -22,6 +22,7 @@ Weitere Informationen:
 - Nutzungsplanung: [docs/user-manual-de-nplso.md](docs/user-manual-de-nplso.md)
 - REST-API: [docs/rest-api-de.md](docs/rest-api-de.md)
 
+
 ## Komponenten
 
 Die Anwendung besteht aus einer Komponente. Wird ein Datenbankserver für das Speichern der Jobqueue verwendet, gehört das Schema etc. auch als Komponente zur Anwendung. Standardmässig wird eine SQlite-Datenbank verwendet, welche automatisch erstellt wird, falls sie nicht vorhanden ist.
@@ -33,7 +34,7 @@ Die Prüfprofile (aka Zusatzkonfiguration) sind nicht Bestandteil der Komponente
 Die Anwendung kann wie folgt gestartet werden:
 
 ```
-java -jar ilivalidator-web-service-server/target/ilivalidator-web-service.jar 
+java -jar ilivalidator-web-service-server/target/ilivalidator-web-service.jar
 ```
 
 respektive mit Docker:
@@ -49,7 +50,7 @@ Die Anwendung beinhaltet bereits eine _application.properties_-Datei. Siehe [app
 Der Dockercontainer verwendet eine leicht angepasste Konfiguration ([application-docker.properties](src/main/resources/application-docker.properties)), damit das Mounten von Verzeichnissen hoffentlich einfacher fällt und weniger Fehler passieren:
 
 - Die SQLite-Datenbank wird im _/work_-Verzeichnis angelegt, das im Dockerimage angelegt wird.
-- Für `WORK_DIRECTORY` wird das _/work_-Verzeichnis verwendet, das im Dockerimage angelegt wird. 
+- Für `WORK_DIRECTORY` wird das _/work_-Verzeichnis verwendet, das im Dockerimage angelegt wird.
 
 Die allermeisten Optionen sind via Umgebungsvariablen exponiert und somit veränderbar. Im Extremfall kann immer noch ein neues Dockerimage erstellt werden mit einer ganz eigenen Konfiguration.
 
@@ -91,7 +92,7 @@ docker run --rm -p8080:8080 -p8000:8000 -v /shared_storage/work:/work/ sogis/ili
 
 Es werden zwei Ports gemapped. Der Port 8080 ist der Port der Anwendung und zwingend notwendig. Der Port 8000 dient dazu, dass das Jobrunr-Dashboard verfügbar ist.
 
-Im lokalen Filesystem (oder Kubernetes-PV-Whatever etc.) muss das Verzeichnis _/shared_storage/work/_ vorhanden sein. Die SQLite-Datenbank, die dazu dient die (REST-API-)Jobs zu koordinieren, befindet sich im _/shared_storage/work/_-Verzeichnis. 
+Im lokalen Filesystem (oder Kubernetes-PV-Whatever etc.) muss das Verzeichnis _/shared_storage/work/_ vorhanden sein. Die SQLite-Datenbank, die dazu dient die (REST-API-)Jobs zu koordinieren, befindet sich im _/shared_storage/work/_-Verzeichnis.
 
 ### Clean up
 
@@ -99,7 +100,7 @@ Ein Scheduler löscht jede halbe Stunde (momentan hardcodiert) alle temporären 
 
 ### Ilivalidator custom functions
 
-Custom-Funktionen können in zwei Varianten verwendet werden. Die Jar-Datei mit den Funktionen muss in einem Verzeichnis liegen und vor jeder Prüfung werden die Klassen dynamisch geladen. Das hat den Nachteil, dass man so kein Native-Image (GraalVM) mit Custom-Funktionen herstellen kann und man z.B. bei einem Webservice die Klassen nicht einfach als Dependency definierten kann, sondern die Jar-Datei muss in einem Verzeichnis liegen, welches beim Aufruf von _ilivalidator_ als Option übergeben wird. Bei der zweiten (neueren) Variante kann man die Custom-Funktionen als normale Dependency im Java-Projekt definieren. Zusätzlich müssen die einzelnen Klassen als Systemproperty der Anwendung bekannt gemacht werden. 
+Custom-Funktionen können in zwei Varianten verwendet werden. Die Jar-Datei mit den Funktionen muss in einem Verzeichnis liegen und vor jeder Prüfung werden die Klassen dynamisch geladen. Das hat den Nachteil, dass man so kein Native-Image (GraalVM) mit Custom-Funktionen herstellen kann und man z.B. bei einem Webservice die Klassen nicht einfach als Dependency definierten kann, sondern die Jar-Datei muss in einem Verzeichnis liegen, welches beim Aufruf von _ilivalidator_ als Option übergeben wird. Bei der zweiten (neueren) Variante kann man die Custom-Funktionen als normale Dependency im Java-Projekt definieren. Zusätzlich müssen die einzelnen Klassen als Systemproperty der Anwendung bekannt gemacht werden.
 
 Im vorliegenden Fall wird die zweite Variante gewählt. Das notwendige Systemproperty wird in der `Application`-Klasse gesetzt. Falls man die erste Variante vorzieht oder aus anderen Gründen verwenden will, macht man z.B. ein Verzeichnis `src/main/resources/libs-ext/` und kopiert beim Builden die Jar-Datei in dieses Verzeichnis. Dazu wird eine Gradle-Konfiguration benötigt. Zur Laufzeit (also wenn geprüft wird) muss man die Jar-Datei auf das Filesystem kopieren und dieses Verzeichnis als Options _ilivalidator_ übergeben.
 
@@ -149,12 +150,12 @@ Achtung: Mit Docker Compose Version 3 kann im Nicht-Swarm-Mode keine CPU-Limits 
 
 ## Externe Abhängigkeiten
 
-Die Zusatzkonfigurationen - ini-Dateien für die Optionen --config und --metaConfig - müssen auf ilidata-Repositories liegen. Dies ist ein bewusster Entscheid (single source of truth). 
+Die Zusatzkonfigurationen - ini-Dateien für die Optionen --config und --metaConfig - müssen auf ilidata-Repositories liegen. Dies ist ein bewusster Entscheid (single source of truth).
 
 ## Interne Struktur
 
 TODO:
-- spring boot / maven multimodule 
+- spring boot / maven multimodule
 - GWT
 - Jobrunr
 - rest api
@@ -168,11 +169,11 @@ TODO:
 
 ## Entwicklung
 
-### Run 
+### Run
 
 First Terminal:
 ```
-./mvnw spring-boot:run -pl *-server -am -Penv-dev 
+./mvnw spring-boot:run -pl *-server -am -Penv-dev
 ```
 
 Second Terminal:
@@ -182,7 +183,7 @@ Second Terminal:
 
 Or without downloading all the snapshots again:
 ```
-./mvnw gwt:codeserver -pl *-client -am -nsu 
+./mvnw gwt:codeserver -pl *-client -am -nsu
 ```
 
 ### Build
