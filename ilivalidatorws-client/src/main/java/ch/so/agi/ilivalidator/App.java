@@ -273,9 +273,7 @@ public class App implements EntryPoint {
                         
                         return null;
                     }
-                    console.log("response: " + response.headers);
                     String jobUrl = response.headers.get(HEADER_OPERATION_LOCATION);
-                    console.log("jobUrl: " + jobUrl);
                     
                     if (apiTimer != null) {
                         apiTimer.cancel();
