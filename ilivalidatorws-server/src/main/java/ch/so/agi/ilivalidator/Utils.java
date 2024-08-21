@@ -15,6 +15,7 @@ public class Utils {
     
     public static Map<String,String> themes() {
         Map<String,String> themes = new HashMap<String,String>();
+        themes.put("dmav", "ilidata:DMAV_V1_0_Validierung-meta");
         themes.put("ipw_2020", "ilidata:VSADSSMINI_2020_LV95_IPW_20230605-meta");
         themes.put("ipw_2020_1", "ilidata:VSADSSMINI_2020_1_LV95_IPW_20230605-meta");
         themes.put("drainagen", "ilidata:VSADSSMINI_2020_LV95_Drainage_20230731-meta");
