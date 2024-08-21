@@ -89,7 +89,7 @@ jobs:
           file: ilivalidatorws-server/Dockerfile.jvm
           labels: ${{ steps.meta.outputs.labels }}
           pull: true
-          #push: ${{ (github.ref == 'refs/heads/main') && (github.event_name != 'pull_request') && !env.ACT }}
+          push: true
           tags: |
             ${{ env.DOCKER_ACCOUNT }}/${{ env.DOCKER_REPO }}:${{ env.VERSION }}
             ${{ env.DOCKER_ACCOUNT }}/${{ env.DOCKER_REPO }}:2.0
