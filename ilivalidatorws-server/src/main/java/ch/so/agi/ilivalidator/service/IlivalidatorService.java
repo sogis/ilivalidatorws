@@ -24,6 +24,7 @@ import ch.interlis.iox.IoxEvent;
 import ch.interlis.iox.IoxException;
 import ch.interlis.iox.IoxReader;
 import ch.interlis.iox_j.EndTransferEvent;
+import ch.interlis.iox_j.IoxUtility;
 import ch.interlis.iox_j.StartBasketEvent;
 import ch.so.agi.ilivalidator.Utils;
 
@@ -197,15 +198,18 @@ public class IlivalidatorService {
                 }               
             }
         } else {
-              for (String transferFileName : transferFileNames) {
-                  String modelName = getModelNameFromTransferFile(transferFileName);
-                  File configFile = Paths.get(docBase, configDirectoryName, INI_SUBDIRECTORY, modelName.toLowerCase() + ".ini").toFile();
-                  if (configFile.exists()) {
-                      settings.setValue(Validator.SETTING_CONFIGFILE, configFile.getAbsolutePath());
-                      log.debug("Config file by model name found in config directory: {}", configFile.getAbsolutePath());
-                      break;
-                  }
-              }            
+            // FIXME
+            // Spielt aber keine grosse Rolle mehr, da wir bereits jetzt nur noch mit Profilen arbeiten.
+            // In 3er-Version gibt es das gar nicht mehr.
+//              for (String transferFileName : transferFileNames) {
+//                  String modelName = getModelNameFromTransferFile(transferFileName);
+//                  File configFile = Paths.get(docBase, configDirectoryName, INI_SUBDIRECTORY, modelName.toLowerCase() + ".ini").toFile();
+//                  if (configFile.exists()) {
+//                      settings.setValue(Validator.SETTING_CONFIGFILE, configFile.getAbsolutePath());
+//                      log.debug("Config file by model name found in config directory: {}", configFile.getAbsolutePath());
+//                      break;
+//                  }
+//              }            
         }
         
         log.info("Validation start");
@@ -255,7 +259,7 @@ public class IlivalidatorService {
             if (ext.equalsIgnoreCase("itf")) {
                 ioxReader = new ItfReader(transferFile);
             } else {
-                ioxReader = new XtfReader(transferFile);
+                ioxReader = new XtfReader(transferFile);                
             }
 
             IoxEvent event;
