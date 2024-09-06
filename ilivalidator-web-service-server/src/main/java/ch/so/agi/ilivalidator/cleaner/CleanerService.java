@@ -43,8 +43,8 @@ public class CleanerService {
     }
     
     @Async("cleanerAsyncTaskExecutor")
-    @Scheduled(cron="0 */30 * * * *")
-    //@Scheduled(fixedRate = 1 * 30 * 1000) /* Runs every 30 seconds */
+    //@Scheduled(cron="0 */30 * * * *")
+    @Scheduled(fixedRate = 1 * 30 * 1000) /* Runs every 30 seconds */
     //@Scheduled(fixedRate = 1 * 10 * 1000) /* Runs every 10 seconds */
     public void cleanUp() throws IOException {    
         long deleteFileAge = 60*60*24; // = 1 Tag
@@ -56,13 +56,18 @@ public class CleanerService {
                         FileTime creationTime = (FileTime) Files.getAttribute(d, "creationTime");                    
                         Instant now = Instant.now();
                         
+                        log.info("now: " + now.toString());
+                        log.info("now (seconds): {}",now.getEpochSecond());
+                        log.info("creationTime: {}",creationTime.toInstant().toString());
+                        log.info("creationTime (seconds): {}",creationTime.toInstant().getEpochSecond());
+                        
                         long fileAge = now.getEpochSecond() - creationTime.toInstant().getEpochSecond();
                         log.trace("Found folder with prefix: {}, age [s]: {}", d, fileAge);
 
-                        if (fileAge > deleteFileAge) {
-                            log.debug("Deleting {}", d.toAbsolutePath());
-                            FileSystemUtils.deleteRecursively(d);
-                        }
+//                        if (fileAge > deleteFileAge) {
+//                            log.debug("Deleting {}", d.toAbsolutePath());
+//                            FileSystemUtils.deleteRecursively(d);
+//                        }
                     } catch (IOException e) {
                         e.printStackTrace();
                         log.error("Error deleting old files: " + e.getMessage());
