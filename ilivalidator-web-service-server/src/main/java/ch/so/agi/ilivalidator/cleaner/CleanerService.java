@@ -53,23 +53,16 @@ public class CleanerService {
             Files.list(Paths.get(workDirectory)).forEach(d -> {                
                 if (d.getName(d.getNameCount()-1).toString().startsWith(folderPrefix)) {
                     try {
-                        FileTime creationTime = (FileTime) Files.getAttribute(d, "creationTime");   
                         FileTime lastModifiedTime = Files.getLastModifiedTime(d);
-
                         Instant now = Instant.now();
                         
-                        log.info("now: " + now.toString());
-                        log.info("now (seconds): {}",now.getEpochSecond());
-                        log.info("creationTime: {}",lastModifiedTime.toInstant().toString());
-                        log.info("creationTime (seconds): {}",lastModifiedTime.toInstant().getEpochSecond());
-                        
                         long fileAge = now.getEpochSecond() - lastModifiedTime.toInstant().getEpochSecond();
-                        log.info("Found folder with prefix: {}, age [s]: {}", d, fileAge);
+                        log.debug("Found folder with prefix: {}, age [s]: {}", d, fileAge);
 
-//                        if (fileAge > deleteFileAge) {
-//                            log.debug("Deleting {}", d.toAbsolutePath());
-//                            FileSystemUtils.deleteRecursively(d);
-//                        }
+                        if (fileAge > deleteFileAge) {
+                            log.info("Deleting {}", d.toAbsolutePath());
+                            FileSystemUtils.deleteRecursively(d);
+                        }
                     } catch (IOException e) {
                         e.printStackTrace();
                         log.error("Error deleting old files: " + e.getMessage());
