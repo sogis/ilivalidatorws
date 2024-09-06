@@ -62,7 +62,7 @@ public class CleanerService {
                         log.info("creationTime (seconds): {}",creationTime.toInstant().getEpochSecond());
                         
                         long fileAge = now.getEpochSecond() - creationTime.toInstant().getEpochSecond();
-                        log.trace("Found folder with prefix: {}, age [s]: {}", d, fileAge);
+                        log.info("Found folder with prefix: {}, age [s]: {}", d, fileAge);
 
 //                        if (fileAge > deleteFileAge) {
 //                            log.debug("Deleting {}", d.toAbsolutePath());
