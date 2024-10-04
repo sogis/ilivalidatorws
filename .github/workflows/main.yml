@@ -45,7 +45,7 @@ jobs:
           ./mvnw -Penv-prod package -DskipTests
           ls -la ilivalidator-web-service-server/target
 
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v4
         if: ${{ failure() }}
         with:
           name: reports-jar
@@ -59,7 +59,7 @@ jobs:
         id: dockerTest
         run: ./mvnw test -Dgroups="docker"
 
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v4
         if: ${{ failure() }}
         with:
           name: reports-docker
