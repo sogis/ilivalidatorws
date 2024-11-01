@@ -12,7 +12,7 @@ Beim Aufruf des *ilivalidator web services* erscheint folgendes Webformular:
 
 ![ilivalidator Startseite](./images/ilivalidator01.png)
 
-Die zu prüfenden Dateien können durch Knopfdruck auf "Choose Files" ausgewählt werden. Die Dateien dürfen *nicht* gezippt sein und zusammen höchstens 200 Megabyte gross sein.
+Die zu prüfenden Dateien können durch Knopfdruck auf "Choose Files" ausgewählt werden. Die Dateien dürfen zusammen höchstens 200 Megabyte gross sein.
 
 ![ilivalidator Dateidialog](./images/ilivalidator02.png)
 

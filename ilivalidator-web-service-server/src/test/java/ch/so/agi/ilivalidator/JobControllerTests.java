@@ -90,6 +90,48 @@ public abstract class JobControllerTests {
         assertTrue(logFileContents.contains("Info: ...validation done"));
     }
  
+    // Prüft, ob eine INTERLIS2-Datei innerhalb einer Zip-Datei 
+    // validiert werden kann. Die Datei ist modellkonform. Es dürfen
+    // keine Fehler gefunden werden.
+    @Test
+    public void validate_ZippedFile_Interlis2_Ok() throws Exception {        
+        String serverUrl = "http://localhost:"+port+API_ENDPOINT_JOBS;
+
+        MultiValueMap<String, Object> parameters = new LinkedMultiValueMap<String, Object>();
+        parameters.add("files", new FileSystemResource("src/test/data/myfolder.zip"));
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Content-Type", "multipart/form-data");
+        headers.set("Accept", "text/plain");
+
+        // Datei hochladen und Response-Status-Code auswerten
+        ResponseEntity<String> postResponse = restTemplate.postForEntity(
+                serverUrl, new HttpEntity<MultiValueMap<String, Object>>(parameters, headers), String.class);
+
+        assertEquals(202, postResponse.getStatusCode().value());
+
+        // Warten, bis die Validierung durch ist (=SUCCEEDED)
+        String operationLocation = postResponse.getHeaders().toSingleValueMap().get(OPERATION_LOCATION_HEADER);
+
+        await()
+            .with().pollInterval(RESULT_POLL_INTERVAL, TimeUnit.SECONDS)
+            .and()
+            .with().atMost(RESULT_WAIT, TimeUnit.MINUTES)
+            .until(new MyCallable(operationLocation, restTemplate));
+
+        // Logfile herunterladen und auswerten
+        ResponseEntity<JobResponse> jobResponse = restTemplate.getForEntity(operationLocation, JobResponse.class);        
+        
+        URL logFileUrl = new URL(jobResponse.getBody().logFileLocation());
+        String logFileContents = null;
+        try (InputStream in = logFileUrl.openStream()) {
+            BufferedReader reader = new BufferedReader(new InputStreamReader(in));
+            logFileContents = reader.lines().collect(Collectors.joining(System.lineSeparator()));
+        }
+        assertTrue(logFileContents.contains("myfolder"));
+        assertTrue(logFileContents.contains("Info: ...validation done"));
+    }
+    
     // Prüft, ob eine INTERLIS2-Datei validiert werden kann.
     // Die Datei ist nicht modellkonform. Es müssen Fehler
     // gefunden werden.

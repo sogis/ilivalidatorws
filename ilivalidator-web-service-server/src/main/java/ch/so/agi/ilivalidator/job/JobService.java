@@ -21,20 +21,30 @@ public class JobService {
     
     private String ilidirs;    
         
-    public JobService(@Value("${app.ilidirs}") String ilidirs) {
+    private String folderPrefix;
+
+    private final Path workDirectoryPath;
+
+    public JobService(
+            @Value("${app.ilidirs}") String ilidirs, 
+            @Value("${app.workDirectory}") String workDirectory,
+            @Value("${app.folderPrefix}") String folderPrefix) {
         this.ilidirs = ilidirs;
+        this.workDirectoryPath = Paths.get(workDirectory);
+        this.folderPrefix = folderPrefix;
     }
     
     @Job(name = "Ilivalidator", retries=0)
     public synchronized boolean validate(JobContext jobContext, Path[] transferFiles, String profile) {
         String jobId = jobContext.getJobId().toString();
+        Path jobDirectoryPath = workDirectoryPath.resolve(folderPrefix + jobId);
         
         List<String> transferFileNames = new ArrayList<>();
         for (Path transferFile : transferFiles) {
             transferFileNames.add(transferFile.toAbsolutePath().toString());
         }
 
-        Path logFilePath = Paths.get(transferFiles[0].getParent().toString(), jobId + ".log");
+        Path logFilePath = jobDirectoryPath.resolve(jobId + ".log");
         String logFileName = logFilePath.toFile().getAbsolutePath();                
         log.debug("<{}> Log file name: {}", jobId, logFileName);
 
