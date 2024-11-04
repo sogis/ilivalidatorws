@@ -158,14 +158,23 @@ public class App implements EntryPoint {
                 int filesSize = 0;
                 for (int i=0; i<input.files.length; i++) {
                     File file = input.files.getAt(i);
-                    fileNames.add(file.name);
-                    // Falls Safari Probleme macht:
-                    // https://github.com/hal/console/blob/d435e24a837adedbd6aefe06495eafaa97c08a65/dmr/src/main/java/org/jboss/hal/dmr/dispatch/Dispatcher.java#L263
-                    formData.append("files", AppendValueUnionType.of(file), file.name);
-                    filesSize += file.size;
-                    int filesSizeMb = filesSize / 1024 / 1024;
-                    if (filesSizeMb > MAX_FILES_SIZE_MB) {
-                        Window.alert("Datei(en) zu gross. Maximum: " + String.valueOf(MAX_FILES_SIZE_MB) + "MB");
+                    if (file.name.toLowerCase().endsWith("zip") 
+                            || file.name.toLowerCase().endsWith("xtf") 
+                            || file.name.toLowerCase().endsWith("xml") 
+                            || file.name.toLowerCase().endsWith("itf")) {
+                        fileNames.add(file.name);
+                        // Falls Safari Probleme macht:
+                        // https://github.com/hal/console/blob/d435e24a837adedbd6aefe06495eafaa97c08a65/dmr/src/main/java/org/jboss/hal/dmr/dispatch/Dispatcher.java#L263
+                        formData.append("files", AppendValueUnionType.of(file), file.name);
+                        filesSize += file.size;
+                        int filesSizeMb = filesSize / 1024 / 1024;
+                        if (filesSizeMb > MAX_FILES_SIZE_MB) {
+                            Window.alert("Datei(en) zu gross. Maximum: " + String.valueOf(MAX_FILES_SIZE_MB) + "MB");
+                            resetInputElements();
+                            return;
+                        }                        
+                    } else {
+                        Window.alert("Dateityp nicht erlaubt.");
                         resetInputElements();
                         return;
                     }
@@ -209,6 +218,7 @@ public class App implements EntryPoint {
                         // Statt "fetch" wird XMLHttpRequest verwendet. 
                         // Diese Klasse erlaubt den Request NICHT asyncron
                         // zu machen.
+                        // 2024-11-04: Entweder deprecated oder funktioniert heute schon nicht mehr synchron.
                         public void run() {                          
                             XMLHttpRequest httpRequest = new XMLHttpRequest();
                             httpRequest.open("GET", jobUrl, false);
