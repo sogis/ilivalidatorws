@@ -10,7 +10,7 @@ jobs:
 
   build-jvm:
     env:
-      DOCKER_ACCOUNT: sogis
+      DOCKER_ACCOUNT: bac82
       DOCKER_REPO: ilivalidator-web-service
       DOCKER_PASSWORD: ${{secrets.DOCKER_PASSWORD_BJSVBAU}}
       DOCKER_USERNAME: ${{secrets.DOCKER_USERNAME_BJSVBAU}}
