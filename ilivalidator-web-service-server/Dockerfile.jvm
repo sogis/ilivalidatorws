@@ -12,7 +12,7 @@ RUN microdnf update -y && \
     microdnf reinstall tzdata -y
 
 ARG UID=1001
-RUN adduser -u $UID ilivalidator 
+RUN adduser -u $UID ilivalidator
 
 WORKDIR /work
 RUN chown $UID:0 . && \
@@ -42,4 +42,4 @@ COPY --chown=$UID:0 --chmod=0775 --from=builder application/application/ ./
 USER $UID
 
 ENV LOG4J_FORMAT_MSG_NO_LOOKUPS=true
-ENTRYPOINT ["java", "-XX:+UseParallelGC", "-XX:MaxRAMPercentage=90.0", "org.springframework.boot.loader.launch.JarLauncher", "--spring.profiles.active=docker"]
+ENTRYPOINT ["java", "-XX:+UseG1GC", "-XX:MaxRAMPercentage=90.0", "org.springframework.boot.loader.launch.JarLauncher", "--spring.profiles.active=docker"]

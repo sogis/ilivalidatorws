@@ -88,7 +88,7 @@
         <dependency>
             <groupId>ch.interlis</groupId>
             <artifactId>ilivalidator</artifactId>
-            <version>1.14.4</version>
+            <version>1.14.3</version>
         </dependency>
         <dependency>
             <groupId>io.github.sogis</groupId>
@@ -282,7 +282,7 @@
                                     <arguments>
                                         <argument>build</argument>
                                         <argument>-t</argument>
-                                        <argument>sogis/ilivalidator-web-service</argument>
+                                        <argument>bac82/ilivalidator-web-service</argument>
                                         <argument>-f</argument>
                                         <argument>Dockerfile.jvm</argument>
                                         <argument>.</argument>

@@ -2,7 +2,7 @@ FROM eclipse-temurin:21.0.3_9-jre-ubi9-minimal
 
 ARG UID=1001
 
-RUN adduser -u $UID ilivalidator 
+RUN adduser -u $UID ilivalidator
 
 WORKDIR /work
 RUN chown $UID:0 . && \
@@ -21,4 +21,4 @@ USER $UID
 EXPOSE 8080
 
 ENV LOG4J_FORMAT_MSG_NO_LOOKUPS=true
-CMD java -XX:+UseParallelGC -XX:MaxRAMPercentage=80.0 -jar application.jar --spring.profiles.active=docker
+CMD java -XX:+UseG1GC -XX:MaxRAMPercentage=80.0 -jar application.jar --spring.profiles.active=docker

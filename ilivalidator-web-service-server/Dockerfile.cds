@@ -16,10 +16,10 @@ RUN java -Djarmode=tools -jar application.jar extract --destination application
 WORKDIR /workspace/app/application
 RUN java -Dspring.aot.enabled=true -XX:ArchiveClassesAtExit=application.jsa -Dspring.context.exit=onRefresh -jar application.jar; exit 0
 
-FROM bellsoft/liberica-openjdk-debian:21.0.4-9-cds 
+FROM bellsoft/liberica-openjdk-debian:21.0.4-9-cds
 
 ARG UID=1001
-RUN adduser -u $UID ilivalidator 
+RUN adduser -u $UID ilivalidator
 
 WORKDIR /work
 RUN chown $UID:0 . && \
@@ -39,7 +39,7 @@ RUN chown -R $UID:0 . && \
 
 USER $UID
 
-ENTRYPOINT ["java",  "-XX:+UseParallelGC", "-XX:MaxRAMPercentage=80.0", "-Dspring.aot.enabled=true", "-XX:SharedArchiveFile=application.jsa", "-jar", "application.jar", "--spring.profiles.active=docker"]
+ENTRYPOINT ["java",  "-XX:+UseG1GC", "-XX:MaxRAMPercentage=80.0", "-Dspring.aot.enabled=true", "-XX:SharedArchiveFile=application.jsa", "-jar", "application.jar", "--spring.profiles.active=docker"]
 
 
 # FROM eclipse-temurin:21.0.3_9-jre-ubi9-minimal AS builder
@@ -53,7 +53,7 @@ ENTRYPOINT ["java",  "-XX:+UseParallelGC", "-XX:MaxRAMPercentage=80.0", "-Dsprin
 # FROM eclipse-temurin:21.0.3_9-jre-ubi9-minimal
 
 # ARG UID=1001
-# RUN adduser -u $UID ilivalidator 
+# RUN adduser -u $UID ilivalidator
 
 # WORKDIR /work
 # RUN chown $UID:0 . && \

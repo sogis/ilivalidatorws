@@ -1,7 +1,6 @@
 name: mirror
 
 on:
-  push:
 
 jobs:
   build:
