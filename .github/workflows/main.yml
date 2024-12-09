@@ -3,8 +3,6 @@ name: CI/CD
 on:
   workflow_dispatch:
   push:
-    paths-ignore:
-      - '**.md'
     branches:
       - "bjsvwbau_gc_experiment"
     paths:
