@@ -5,6 +5,10 @@ on:
   push:
     paths-ignore:
       - '**.md'
+    branches:
+      - "bjsvwbau_gc_experiment"
+    paths:
+      - ".github/workflows/main.yaml"
 
 jobs:
 
