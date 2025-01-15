@@ -88,7 +88,7 @@
         <dependency>
             <groupId>ch.interlis</groupId>
             <artifactId>ilivalidator</artifactId>
-            <version>1.14.4</version>
+            <version>1.14.5</version>
         </dependency>
         <dependency>
             <groupId>io.github.sogis</groupId>
@@ -108,7 +108,7 @@
         <dependency>
             <groupId>ch.geowerkstatt.ilivalidator.extensions.functions</groupId>
             <artifactId>interlis-functions-ngk-so</artifactId>
-            <version>1.0.2</version>
+            <version>1.0.3</version>
         </dependency>
         <dependency>
             <groupId>org.springdoc</groupId>
