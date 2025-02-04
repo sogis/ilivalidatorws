@@ -28,8 +28,14 @@ public class ProfileController {
     
     @GetMapping("/api/profiles")
     public ResponseEntity<?> getProfiles() throws IOException {
+        Map<String, String> profilesMap = new HashMap<>(); 
+        for (Map.Entry<String, String> entry : profileProperties.getProfiles().entrySet()) {
+            String value[] = entry.getValue().split("\\|");
+            profilesMap.put(value[0].trim(), value[1].trim());
+        }
+        
         // TreeMap: Sortiert die Map by key
-        TreeMap<String, String> treeMap = new TreeMap<>(profileProperties.getProfiles());
+        TreeMap<String, String> treeMap = new TreeMap<>(profilesMap);
 
         HashMap<String, Map<String,String>> profiles = new HashMap<>();
         profiles.put("profiles", treeMap);

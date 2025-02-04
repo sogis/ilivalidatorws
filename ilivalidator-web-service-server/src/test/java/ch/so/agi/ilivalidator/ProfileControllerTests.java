@@ -38,7 +38,7 @@ public abstract class ProfileControllerTests {
     public void getValidationProfiles_Ok() throws Exception {
         String serverUrl = "http://localhost:"+port+API_ENDPOINT_PROFILES;
 
-        ResponseEntity<String> response = restTemplate.getForEntity(serverUrl, String.class);
+        ResponseEntity<String> response = restTemplate.getForEntity(serverUrl, String.class);        
         Map<String, Object> body = mapper.readValue(response.getBody(), Map.class);
         Map<String, String> profiles = (Map<String, String>) body.get("profiles");
         
