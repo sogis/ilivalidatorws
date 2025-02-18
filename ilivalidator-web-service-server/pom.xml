@@ -103,7 +103,7 @@
         <dependency>
             <groupId>ch.geowerkstatt.ilivalidator.extensions.functions</groupId>
             <artifactId>geow-interlis-functions</artifactId>
-            <version>0.2.0</version>
+            <version>0.2.1</version>
         </dependency>
         <dependency>
             <groupId>ch.geowerkstatt.ilivalidator.extensions.functions</groupId>
