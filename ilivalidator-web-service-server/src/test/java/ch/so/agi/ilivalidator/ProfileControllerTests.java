@@ -43,6 +43,6 @@ public abstract class ProfileControllerTests {
         Map<String, String> profiles = (Map<String, String>) body.get("profiles");
         
         assertEquals(200, response.getStatusCode().value());
-        assertEquals("ilidata:VSADSSMINI_2020_LV95_Drainage_20230731-meta", profiles.get("Drainagen"));
+        assertEquals("ilidata:VSADSSMINI_2020_LV95_Drainage_20250311-meta", profiles.get("Drainagen"));
     }
 }
