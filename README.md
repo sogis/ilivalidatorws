@@ -2,230 +2,578 @@
 
 # ilivalidator-web-service
 
-The ilivalidator web service is a [Spring Boot](https://projects.spring.io/spring-boot/) application and uses [ilivalidator](https://github.com/claeis/ilivalidator) for the INTERLIS transfer file validation.
+Spring Boot Webservice für die Validierung von INTERLIS-Transferdateien mit [ilivalidator](https://github.com/claeis/ilivalidator).
 
-## Beschreibung
+## Features
 
-* checks INTERLIS 1+2 transfer files: see [https://github.com/claeis/ilivalidator](https://github.com/claeis/ilivalidator) for all the INTERLIS validation magic of ilivalidator
-* uses remote config files for validation tailoring
-* user can upload multiple transfer files at once
-* REST-API
-* simple clustering for horizontal scaling
+- ✅ Validierung von INTERLIS 1+2 Transferdateien
+- ✅ Remote Config Files für Validierungs-Profile
+- ✅ Multi-File Upload
+- ✅ REST API
+- ✅ Clustering für horizontale Skalierung
+- ✅ Prometheus Metrics für Monitoring & Autoscaling
+- ✅ Jobrunr Dashboard für Job-Management
+- ✅ KEDA Scale-to-Zero Support
 
-## Anleitungen
+## Quick Start
 
-Der Benutzer wählt eine oder mehrere INTERLIS-Transferdateien aus und lädt sie hoch. Im Browser erscheint nach erfolgter Prüfung das Resultat und Links zu den Logdateien. Es stehen verschiedene Prüfprofile zur Verfügung, welche die Validierung zusätzlich konfigurieren (z.B. Warnung statt Error, zusätzliche Constraints, etc.).
+### Lokal mit Spring Boot
 
-Weitere Informationen:
-
-- GUI: [docs/user-manual-de.md](docs/user-manual-de.md)
-- Nutzungsplanung: [docs/user-manual-de-nplso.md](docs/user-manual-de-nplso.md)
-- REST-API: [docs/rest-api-de.md](docs/rest-api-de.md)
-
-
-## Komponenten
-
-Die Anwendung besteht aus einer Komponente. Wird ein Datenbankserver für das Speichern der Jobqueue verwendet, gehört das Schema etc. auch als Komponente zur Anwendung. Standardmässig wird eine SQlite-Datenbank verwendet, welche automatisch erstellt wird, falls sie nicht vorhanden ist.
-
-Die Prüfprofile (aka Zusatzkonfiguration) sind nicht Bestandteil der Komponente, sondern sie liegen in eigenen oder fremden ilidata-Repositories.
-
-## Konfigurieren und Starten
-
-Die Anwendung kann wie folgt gestartet werden:
-
-```
-java -jar ilivalidator-web-service-server/target/ilivalidator-web-service.jar
-```
-
-respektive mit Docker:
-
-```
-docker run -p 8080:8080 sogis/ilivalidator-web-service
-```
-
-Konfiguration via _application.properties_ im Verzeichnis in dem der Service gestartet wird. Oder entsprechende alternative Konfigurationsmöglichkeiten von [Spring Boot](https://docs.spring.io/spring-boot/reference/features/external-config.html).
-
-Die Anwendung beinhaltet bereits eine _application.properties_-Datei. Siehe [application.properties](src/main/resources/application.properties), welche beim obigen Aufruf standardmässig verwendet wird.
-
-Der Dockercontainer verwendet eine leicht angepasste Konfiguration ([application-docker.properties](src/main/resources/application-docker.properties)), damit das Mounten von Verzeichnissen hoffentlich einfacher fällt und weniger Fehler passieren:
-
-- Die SQLite-Datenbank wird im _/work_-Verzeichnis angelegt, das im Dockerimage angelegt wird.
-- Für `WORK_DIRECTORY` wird das _/work_-Verzeichnis verwendet, das im Dockerimage angelegt wird.
-
-Die allermeisten Optionen sind via Umgebungsvariablen exponiert und somit veränderbar. Im Extremfall kann immer noch ein neues Dockerimage erstellt werden mit einer ganz eigenen Konfiguration.
-
-### Optionen (Umgebungsvariablen)
-
-Mit Docker wird die Anwendung mit einem docker-Profil gestartet (siehe Dockerfile). Standardwerte gemäss diesem application-docker.properties:
-
-| Name | Beschreibung | Standard |
-|-----|-----|-----|
-| `TZ` | Zeitzone des Dockercontainers. Z.B. `Europe/Zurich` | |
-| `MAX_FILE_SIZE` | Die maximale Grösse einer Datei, die hochgeladen werden kann in Megabyte. | `200` |
-| `LOG_LEVEL` | Das Logging-Level des Spring Boot Frameworks. | `INFO` |
-| `LOG_LEVEL_DB_CONNECTION_POOL` | Das Logging-Level des DB-Connection-Poolsocket. | `INFO` |
-| `LOG_LEVEL_APPLICATION` | Das Logging-Level der Anwendung (= selber geschriebener Code). | `DEBUG` |
-| `CONNECT_TIMEOUT` | Die Zeit in Millisekunden, die bis zu einem erfolgreichem Connect gewartet wird. Betrifft sämtliche Methoden, welche `sun.net.client.defaultConnectTimeout` berücksichtigen. Die Option dient dazu damit langsame INTERLIS-Modellablage schneller zu einem Timeout führen. | `5000` |
-| `READ_TIMEOUT` | Die Zeit in Millisekunden, die bis zu einem erfolgreichem Lesen gewartet wird. Betrifft sämtliche Methoden, welche `sun.net.client.defaultConnectTimeout` berücksichtigen. Die Option dient dazu damit langsame INTERLIS-Modellablage schneller zu einem Timeout führen. | `5000` |
-| `WORK_DIRECTORY` | Verzeichnis, in das die zu prüfenden INTERLIS-Transferdatei und die Logdateien kopiert werden (in ein temporäres Unterverzeichnis, das im `WORK_DIRECTORY` erstellt wird). Falls `local` Storage Service gewählt ist, muss das Verzeichnis, bei einem Betrieb mit mehreren Containern, zwingend geteilt werden muss. Sonst ist nicht sichergestellt, dass man die Logdatei(en) herunterladen kann. Falls `s3` Storage Service gewählt ist, muss der Name des Buckets gewählt werden, in den die Daten kopiert werden. | `/work/` |
-| `FOLDER_PREFIX` | Für jede zu prüfende Datei wird im `WORK_DIRECTORY`-Verzeichnis ein temporäres Verzeichnis erstellt. Der Prefix wird dem Namen des temporären Verzeichnisses vorangestellt. | `ilivalidatorws_` |
-| `CLEANER_ENABLED` | Dient zum Ein- und Ausschalten des Aufräumprozesses, der alte, geprüfte Dateien (INTERLIS-Transferdateien, Logfiles) löscht. | `true` |
-| `REST_API_ENABLED` | Dient zum Ein- und Ausschalten des REST-API-Controllers und damit der eigentlichen Funktionalität (auch wenn Jobrunr trotzdem initialisiert wird). | `true` |
-| `JDBC_URL` | Die JDBC-Url der Sqlite-Datei, die dem Speichern der Jobs dient, welche mittels REST-API getriggert wurden. Die Datei wird im Standard-`WORK`-Verzeichnis gespeichert, da dieses beim Multi-Container-Betrieb geteilt werden muss. Andere JDBC-fähige Datenbanken sind ebenfalls möglich. Dann müssten noch mindestens Login und Password als Option exponiert werden. Und die Anwendung müsste neu mit dem dazugehörigen JDBC-Treiber gebuildet werden. | `jdbc:sqlite:/work/jobrunr_db.sqlite` |
-| `JOBRUNR_SERVER_ENABLED` | Dient die Instanz als sogenannter Background-Jobserver, d.h. werden mittels REST-API hochgeladene INTERLIS-Transferdateien validiert. Wird nur eine Instanz betrieben, muss die Option zwingen `true` sein, da sonst der Job nicht ausgeführt wird. | `true` |
-| `JOBRUNR_POLL_INTERVAL` | Es wird im Intervall (in Sekunden) nach neuen Validierungsjobs geprüft. | `10` |
-| `JOBRUNR_WORKER_COUNT` | Anzahl Jobs, die in einem "Worker" gleichzeitig durchgeführt werden können. Im Prinzip nicht sehr relevant, da der Validierungsjob synchronisiert ist (nicht thread safe). | `1` |
-| `JOBRUNR_DASHBOARD_ENABLED` | Das Jobrunr-Dashboard wird auf dem Port 8000 gestartet. | `true` |
-| `JOBRUNR_DASHBOARD_USER` | Username für Jobrunr-Dasboard. Achtung: Basic Authentication. | `admin` |
-| `JOBRUNR_DASHBOARD_PWD` | Passwort für Jobrunr-Dasboard. Achtung: Basic Authentication. | `admin` |
-| `TOMCAT_THREADS_MAX` | Maximale Anzahl Threads, welche die Anwendung gleichzeitig bearbeitet. | `20` |
-| `TOMCAT_ACCEPT_COUNT` | Maximale Grösser der Queue, falls keine Threads mehr verfügbar. | `100` |
-| `TOMCAT_MAX_CONNECTIONS` | Maximale Anzahl Threads des Servers. | `500` |
-| `HIKARI_MAX_POOL_SIZE` | Grösse des DB-Connections-Pools | `10` |
-| `ILIDIRS` | Modell- und Datenrepositorie, die verwendet werden sollen. | `https://geo.so.ch/models;https://models.interlis.ch;https://models.geo.admin.ch` |
-
-Ein `docker-run`-Befehl könnte circa so aussehen:
-
-```
-docker run --rm -p8080:8080 -p8000:8000 -v /shared_storage/work:/work/ sogis/ilivalidator-web-service:3
-```
-
-Es werden zwei Ports gemapped. Der Port 8080 ist der Port der Anwendung und zwingend notwendig. Der Port 8000 dient dazu, dass das Jobrunr-Dashboard verfügbar ist.
-
-Im lokalen Filesystem (oder Kubernetes-PV-Whatever etc.) muss das Verzeichnis _/shared_storage/work/_ vorhanden sein. Die SQLite-Datenbank, die dazu dient die (REST-API-)Jobs zu koordinieren, befindet sich im _/shared_storage/work/_-Verzeichnis.
-
-### Clean up
-
-Ein Scheduler löscht jede halbe Stunde (momentan hardcodiert) alle temporären Verzeichnisse, die älter als 60x60 Sekunden sind.
-
-### Ilivalidator custom functions
-
-Custom-Funktionen können in zwei Varianten verwendet werden. Die Jar-Datei mit den Funktionen muss in einem Verzeichnis liegen und vor jeder Prüfung werden die Klassen dynamisch geladen. Das hat den Nachteil, dass man so kein Native-Image (GraalVM) mit Custom-Funktionen herstellen kann und man z.B. bei einem Webservice die Klassen nicht einfach als Dependency definierten kann, sondern die Jar-Datei muss in einem Verzeichnis liegen, welches beim Aufruf von _ilivalidator_ als Option übergeben wird. Bei der zweiten (neueren) Variante kann man die Custom-Funktionen als normale Dependency im Java-Projekt definieren. Zusätzlich müssen die einzelnen Klassen als Systemproperty der Anwendung bekannt gemacht werden.
-
-Im vorliegenden Fall wird die zweite Variante gewählt. Das notwendige Systemproperty wird in der `Application`-Klasse gesetzt. Falls man die erste Variante vorzieht oder aus anderen Gründen verwenden will, macht man z.B. ein Verzeichnis `src/main/resources/libs-ext/` und kopiert beim Builden die Jar-Datei in dieses Verzeichnis. Dazu wird eine Gradle-Konfiguration benötigt. Zur Laufzeit (also wenn geprüft wird) muss man die Jar-Datei auf das Filesystem kopieren und dieses Verzeichnis als Options _ilivalidator_ übergeben.
-
-### Clustering
-
-Sämtliche "Koordinationsaufgaben" wie z.B. das Entpacken der Config-Dateien, das Löschen von alten Files etc. sollte (und in einigen Fällen: darf) nur von einer Instanz ausgeführt werden. Als Beispiel eine einfache `docker-compose` Konfiguration:
-
-```
-version: '3'
-services:
-  frontend:
-    image: sogis/ilivalidator-web-service:3
-    restart: unless-stopped
-    environment:
-      TZ: Europe/Zurich
-      JOBRUNR_SERVER_ENABLED: "false"
-    ports:
-      - 8080:8080
-      - 8000:8000
-    volumes:
-      - type: volume
-        source: work
-        target: /work
-  worker:
-    image: sogis/ilivalidator-web-service:3
-    restart: unless-stopped
-    deploy:
-      replicas: 2
-    environment:
-      TZ: Europe/Zurich
-      JOBRUNR_DASHBOARD_ENABLED: "false"
-      REST_API_ENABLED: "false"
-      UNPACK_CONFIG_FILES: "false"
-      CLEANER_ENABLED: "false"
-    volumes:
-      - type: volume
-        source: work
-        target: /work
-volumes:
-  docbase:
-  work:
-```
-
-Es wird ein "frontend"-Service gestartet, welche als Schnittstelle gegen aussen dient. Es werden mehrere "worker"-Services gestartet (`replicas`), die nur für das Validieren einer INTERLIS-Transferdatei zuständig sind. Es sind keine Port exponiert, da keiner dieser Worker-Service von aussen verfügbar sein muss. Es werden verschiedene Applikationsfunktionen ausgeschaltet (sieh Umgebungsvariablen). Das Jobmanagement wird mit [Jobrunr](https://jobrunr.io) gemacht.
-
-Achtung: Mit Docker Compose Version 3 kann im Nicht-Swarm-Mode keine CPU-Limits gesetzt werden.
-
-## Externe Abhängigkeiten
-
-Die Zusatzkonfigurationen - ini-Dateien für die Optionen --config und --metaConfig - müssen auf ilidata-Repositories liegen. Dies ist ein bewusster Entscheid (single source of truth).
-
-## Interne Struktur
-
-TODO:
-- spring boot / maven multimodule
-- GWT
-- Jobrunr
-- rest api
-- Max file size: Stand heute an zwei Orten...
-- Test und Dockertests
-- Wie wird metaConfig etc. getestet? (Weiss ich noch nicht zu 100%: Idee neu wäre wohl mit kleinem lokalen Dockerimage mit ilidata.xml etc. Dann müsste preferred Ili Repo im Test noch anders gestetzt werden.)
-- Registrierung Zusatzfunktionen
-- --spring.profiles.active=docker
-- ./mvnw versions:set -DnewVersion=3.0.1-SNAPSHOT -DprocessAllModules (noch nicht implementiert)
-- git-commit-id-plugin -> inkl. Link: http://localhost:8080/actuator/info
-
-## Entwicklung
-
-### Run
-
-First Terminal:
-```
+```bash
 ./mvnw spring-boot:run -pl *-server -am -Penv-dev
 ```
 
-Second Terminal:
-```
-./mvnw gwt:codeserver -pl *-client -am
+**URLs:**
+- App: http://localhost:8080
+- Dashboard: http://localhost:8000/dashboard (admin/admin)
+- Metrics: http://localhost:8080/actuator/prometheus
+
+### Docker Compose
+
+```bash
+# Mit offiziellem Image
+docker-compose up -d
+
+# Worker skalieren
+docker-compose up -d --scale worker=5
+
+# Logs
+docker-compose logs -f
+
+# Stop
+docker-compose down
 ```
 
-Or without downloading all the snapshots again:
+### Kubernetes
+
+```bash
+# Standard Deployment
+kubectl apply -f k8s/deployment-base.yaml
+
+# Mit KEDA Autoscaling (Scale-to-Zero)
+kubectl apply -f k8s/deployment-keda.yaml
 ```
+
+Siehe [k8s/README.md](k8s/README.md) für Details.
+
+## Dokumentation
+
+- **GUI:** [docs/user-manual-de.md](docs/user-manual-de.md)
+- **REST-API:** [docs/rest-api-de.md](docs/rest-api-de.md)
+- **Nutzungsplanung:** [docs/user-manual-de-nplso.md](docs/user-manual-de-nplso.md)
+- **Kubernetes:** [k8s/README.md](k8s/README.md)
+
+## Entwicklung
+
+### Option 1: Spring Boot (Schnellste Iteration)
+
+```bash
+# Backend
+./mvnw spring-boot:run -pl *-server -am -Penv-dev
+
+# Frontend Hot Reload (optional)
 ./mvnw gwt:codeserver -pl *-client -am -nsu
+```
+
+### Option 2: Docker Compose (Realistisches Setup)
+
+```bash
+# Build
+./mvnw clean package -DskipTests -Penv-prod
+
+# Start
+docker-compose -f docker-compose.local.yaml up -d
+
+# Rebuild bei Code-Änderungen
+./mvnw package -DskipTests -Penv-prod -pl ilivalidator-web-service-server
+docker-compose -f docker-compose.local.yaml up -d --build
 ```
 
 ### Build
 
-```
-./mvnw -Penv-prod clean package -DexcludedGroups="docker"
-```
+```bash
+# Standard Build (mit GWT-Client)
+./mvnw clean package -DskipTests -Penv-prod
 
-In der Package-Phase werden die "Spring pur"-Tests durchgeführt und es wird am Ende ein Dockerimage für die Dockertests erstellt. Die definitiven Dockerimages werden wegen des Multi-Arch-Builds in der Pipeline erstellt und publiziert. Die Tests können auch separat ausgeführt werden.
+# Production Build (ohne Tests)
+./mvnw clean package -DskipTests -Penv-prod -DexcludedGroups="docker"
 
-Maven kennt Integrationtests in der Verify-Phase (nach Package). Wir verwenden jedoch nochmals eine separate Testphase, um die Dockertests durchzuführen (siehe nachfolgendes Kapitel).
-
-### Tests
-
-```
+# Tests
 ./mvnw -Penv-test clean test -DexcludedGroups="docker"
-```
 
-```
+# Docker Tests
 ./mvnw -Penv-test clean test -Dgroups="docker"
+
+# Einzelner Test
+./mvnw -Penv-test test -Dtest=SpringJobControllerTests#validate_File_Interlis2_Ok
 ```
 
-Einzelner Test ausführen:
+**Maven Profile:**
+- `-Penv-prod` - Baut GWT-Client und packt JavaScript-Dateien ins Server-JAR (erforderlich für Docker/Production)
+- `-Penv-dev` - Überspringt GWT-Build für schnellere Iteration (nur für `spring-boot:run`)
+- `-Penv-test` - Baut Test-Docker-Images
+
+## Deployment
+
+### Docker
+
+#### Einzelner Container
+
+```bash
+docker run -p 8080:8080 -p 8000:8000 \
+  -v $(pwd)/work:/work \
+  sogis/ilivalidator-web-service:3
+```
+
+#### Docker Compose (Clustering)
+
+```bash
+# Production Setup
+docker-compose up -d
+
+# Development (Complete Build from Source)
+docker-compose -f docker-compose.dev.yaml up -d --build
+
+# Fast Iteration (mit vorgebautem JAR)
+./mvnw clean package -DskipTests -Penv-prod
+docker-compose -f docker-compose.local.yaml up -d
+```
+
+**Verfügbare docker-compose Files:**
+- `docker-compose.yaml` - Production mit offiziellem Image
+- `docker-compose.dev.yaml` - Complete Build from Source (~5 Min)
+- `docker-compose.local.yaml` - Schnelle Iteration mit JAR (~30s)
+
+### Kubernetes
+
+```bash
+# Standard Deployment (feste Worker-Anzahl)
+kubectl apply -f k8s/deployment-base.yaml
+
+# KEDA Autoscaling (Scale-to-Zero)
+helm install keda kedacore/keda --namespace keda --create-namespace
+kubectl apply -f k8s/deployment-keda.yaml
+
+# Status
+kubectl get pods -n ilivalidator
+kubectl get scaledobject -n ilivalidator
+
+# Logs
+kubectl logs -f deployment/ilivalidator-frontend -n ilivalidator
+
+# Port-Forward
+kubectl port-forward -n ilivalidator svc/ilivalidator-frontend 8080:8080 8000:8000
+```
+
+Details siehe [k8s/README.md](k8s/README.md).
+
+### k3d (Lokales Kubernetes)
+
+```bash
+# Cluster erstellen
+k3d cluster create ilivalidator-dev \
+  --port "8080:30080@server:0" \
+  --port "8000:30800@server:0"
+
+# Image bauen und laden
+./mvnw clean package -DskipTests -Penv-prod
+docker build -f Dockerfile.local -t ilivalidator-web-service:local .
+k3d image import ilivalidator-web-service:local -c ilivalidator-dev
+
+# Deploy
+kubectl apply -f k8s/deployment-base.yaml
+
+# Cleanup
+k3d cluster delete ilivalidator-dev
+```
+
+## Konfiguration
+
+### Umgebungsvariablen
+
+#### Wichtigste Settings
+
+| Variable | Frontend | Worker | Beschreibung | Default |
+|----------|----------|--------|--------------|---------|
+| `JOBRUNR_SERVER_ENABLED` | `false` | `true` | Background Job Server aktivieren | `true` |
+| `REST_API_ENABLED` | `true` | `false` | REST API aktivieren | `true` |
+| `JOBRUNR_DASHBOARD_ENABLED` | `true` | `false` | Dashboard aktivieren | `true` |
+| `CLEANER_ENABLED` | `true` | `false` | Alte Files automatisch löschen | `true` |
+| `MAX_FILE_SIZE` | `200` | `200` | Max Upload Size (MB) | `200` |
+| `JOBRUNR_POLL_INTERVAL` | - | `5` | Job Polling Intervall (Sekunden) | `10` |
+| `JOBRUNR_WORKER_COUNT` | - | `1` | Jobs pro Worker | `1` |
+
+#### Alle Optionen
+
+| Name | Beschreibung | Standard |
+|------|--------------|----------|
+| `TZ` | Zeitzone | - |
+| `LOG_LEVEL` | Spring Boot Logging Level | `INFO` |
+| `LOG_LEVEL_APPLICATION` | Application Logging Level | `DEBUG` |
+| `CONNECT_TIMEOUT` | Connection Timeout (ms) | `5000` |
+| `READ_TIMEOUT` | Read Timeout (ms) | `5000` |
+| `WORK_DIRECTORY` | Verzeichnis für Uploads/Logs | `/work/` |
+| `FOLDER_PREFIX` | Prefix für temp. Verzeichnisse | `ilivalidatorws_` |
+| `JDBC_URL` | SQLite/PostgreSQL Connection String | `jdbc:sqlite:/work/jobrunr_db.sqlite` |
+| `TOMCAT_THREADS_MAX` | Max Tomcat Threads | `20` |
+| `TOMCAT_ACCEPT_COUNT` | Request Queue Size | `100` |
+| `TOMCAT_MAX_CONNECTIONS` | Max Connections | `500` |
+| `HIKARI_MAX_POOL_SIZE` | DB Connection Pool Size | `10` |
+| `ILIDIRS` | INTERLIS Model Repositories | `https://geo.so.ch/models;...` |
+
+### Clustering Setup
+
+Für Multi-Container Deployments:
+
+**Frontend (eine Instanz):**
+- `JOBRUNR_SERVER_ENABLED=false` - Führt keine Jobs aus
+- `REST_API_ENABLED=true` - Nimmt Requests entgegen
+- `JOBRUNR_DASHBOARD_ENABLED=true` - Dashboard verfügbar
+- `CLEANER_ENABLED=true` - Räumt alte Files auf
+
+**Worker (mehrere Instanzen):**
+- `JOBRUNR_SERVER_ENABLED=true` - Führt Jobs aus
+- `REST_API_ENABLED=false` - Kein API
+- `JOBRUNR_DASHBOARD_ENABLED=false` - Kein Dashboard
+- `CLEANER_ENABLED=false` - Nur Frontend räumt auf
+
+**Shared Storage:** Alle Container benötigen Zugriff auf `/work/` für SQLite DB und Uploads.
+
+## Monitoring
+
+### Prometheus Metrics
+
+Die App exponiert Jobrunr-Metriken unter `/actuator/prometheus`:
+
+```bash
+curl http://localhost:8080/actuator/prometheus | grep jobrunr
+```
+
+**Verfügbare Metrics:**
+- `jobrunr_pending_jobs` - Wartende Jobs (SCHEDULED + ENQUEUED)
+- `jobrunr_processing_jobs` - Aktuell verarbeitende Jobs
+- `jobrunr_succeeded_jobs` - Erfolgreich abgeschlossene Jobs
+- `jobrunr_failed_jobs` - Fehlgeschlagene Jobs
+
+Diese Metriken können für:
+- **Monitoring** mit Prometheus/Grafana genutzt werden
+- **Autoscaling** mit KEDA für Scale-to-Zero
+
+### Health Checks
+
+```bash
+# Liveness
+curl http://localhost:8080/actuator/health/liveness
+
+# Readiness
+curl http://localhost:8080/actuator/health/readiness
+
+# Full Health
+curl http://localhost:8080/actuator/health
+```
+
+### Jobrunr Dashboard
+
+Das Dashboard zeigt Job-Status, Statistiken und Server-Metriken:
+
+```bash
+# Lokal
+open http://localhost:8000/dashboard
+
+# Kubernetes
+kubectl port-forward -n ilivalidator svc/ilivalidator-frontend 8000:8000
+open http://localhost:8000/dashboard
+
+# Login: admin / admin
+```
+
+## REST API
+
+### Job hochladen
+
+```bash
+curl -X POST http://localhost:8080/api/jobs \
+  -F "files=@/path/to/file.xtf" \
+  -F "profile=Nutzungsplanung"
+```
+
+**Response:**
+```json
+{
+  "jobId": "123e4567-e89b-12d3-a456-426614174000"
+}
+```
+
+### Job Status abfragen
+
+```bash
+curl http://localhost:8080/api/jobs/{jobId}
+```
+
+**Response:**
+```json
+{
+  "createdAt": "2024-01-13T10:00:00",
+  "updatedAt": "2024-01-13T10:00:30",
+  "jobStatus": "SUCCEEDED",
+  "validationResult": "SUCCEEDED",
+  "logFile": "http://localhost:8080/api/logs/ilivalidatorws_xxx/xxx.log",
+  "xtfLogFile": "http://localhost:8080/api/logs/ilivalidatorws_xxx/xxx.log.xtf",
+  "csvLogFile": "http://localhost:8080/api/logs/ilivalidatorws_xxx/xxx.log.csv"
+}
+```
+
+Details siehe [docs/rest-api-de.md](docs/rest-api-de.md).
+
+## Architektur
+
+### Komponenten
 
 ```
-./mvnw -Penv-test test -Dtest=SpringJobControllerTests#validate_File_Interlis2_Ok -Dsurefire.failIfNoSpecifiedTests=false
+┌─────────────────┐
+│   Frontend      │ ← REST API, Dashboard, Metrics
+│   Container     │ ← Port 8080, 8000
+└────────┬────────┘
+         │
+         ├──────────┐
+         │          │
+┌────────▼────┐ ┌──▼─────────┐
+│  Worker 1   │ │  Worker N  │ ← Job Processing
+└─────────────┘ └────────────┘
+         │          │
+         └────┬─────┘
+              │
+       ┌──────▼──────┐
+       │   SQLite    │ ← Job Queue (shared)
+       │ /work/*.db  │
+       └─────────────┘
+              │
+       ┌──────▼──────┐
+       │ Shared PVC  │ ← Upload/Log Files
+       │   /work/    │
+       └─────────────┘
 ```
 
-### Lokales Modell- und Daten-Repository
+### KEDA Autoscaling
 
-Für die Durchführung der Tests wird ein INTERLIS-Modellrepository benötigt. Um zur Laufzeit der Tests nicht von fremden (dazu gehört auch unser eigenes) Repositories abhängig zu sein und Veränderungen in solchen (z.B. replaced Modelle, Änderungen in den ini-Konfigs), wird ein Dockerimage mit den für die Tests benötigten Modellen hergestellt. Die Modelle liegen im _*-server/src/test/docker/models_-Ordner. Die ilimodels.xml-Datei wird mit ilimanager hergestellt und sie muss im gleichen Ordner wie die Modelle zu liegen kommen (siehe Befehl unten). Das Dockerimage wird im Maven-Build erzeugt und in den Tests mit Testcontainers hochgefahren.
+KEDA nutzt die `jobrunr_pending_jobs` Metric für automatisches Scaling:
 
-In Units, Time und CoordSys musste das Metaattribut "precursorVersion" gelöscht werden, weil es im Repo keine geben wird und ili2c solche Modell anschliessend ignoriert.
-
+```yaml
+triggers:
+- type: prometheus
+  metadata:
+    query: jobrunr_pending_jobs
+    threshold: "5"  # 1 Worker pro 5 Jobs
+    activationThreshold: "0"  # Scale to zero bei 0 Jobs
 ```
-java -jar ilimanager-0.9.1.jar --createIliModels --repos models --out models/ilimodels.xml
+
+**Vorteile:**
+- ✅ Automatisches Scale-to-Zero bei Idle
+- ✅ Automatisches Wake-up bei neuen Jobs
+- ✅ Keine Kosten für ungenutzte Worker
+- ✅ Funktioniert mit SQLite (kein PostgreSQL nötig)
+
+## Troubleshooting
+
+### Port bereits belegt
+
+```bash
+# Prozess finden
+lsof -i :8080
+lsof -i :8000
+
+# Docker Container stoppen
+docker-compose down
 ```
 
-Zusätzlich ist auch ein ilidata.xml notwendig für die ilivalidator-Konfigurationen (ini-Files). Die Datei wurde manuell angelegt und nachgeführt.
+### KEDA Worker skalieren nicht
 
-Docker image builden:
+```bash
+# KEDA Status prüfen
+kubectl describe scaledobject ilivalidator-worker-scaler -n ilivalidator
 
+# Metrics prüfen
+kubectl exec -it deployment/ilivalidator-frontend -n ilivalidator -- \
+  curl localhost:8080/actuator/prometheus | grep jobrunr_pending_jobs
+
+# KEDA Operator Logs
+kubectl logs -n keda deployment/keda-operator --tail=50
 ```
-docker build -t sogis/interlis-repository-test .
+
+### Jobs werden nicht verarbeitet
+
+```bash
+# Worker Logs prüfen (Docker)
+docker-compose logs worker | grep -i error
+
+# Worker Logs prüfen (Kubernetes)
+kubectl logs -f deployment/ilivalidator-worker -n ilivalidator
+
+# SQLite DB prüfen
+docker exec -it ilivalidator-frontend \
+  sqlite3 /work/jobrunr_db.sqlite \
+  "SELECT id, state FROM jobrunr_jobs ORDER BY createdAt DESC LIMIT 10;"
+
+# Dashboard prüfen
+open http://localhost:8000/dashboard
 ```
+
+### Shared Volume funktioniert nicht (Kubernetes)
+
+```bash
+# PVC Status prüfen
+kubectl get pvc -n ilivalidator
+kubectl describe pvc ilivalidator-work-pvc -n ilivalidator
+
+# Falls ReadWriteMany nicht unterstützt wird:
+# - NFS Server aufsetzen
+# - Anderen RWX Storage Provider nutzen
+# - Auf PostgreSQL statt SQLite wechseln
+```
+
+## Performance Tuning
+
+### Worker Resources
+
+**Docker Compose:**
+```yaml
+worker:
+  deploy:
+    resources:
+      limits:
+        cpus: '4.0'
+        memory: 8G
+```
+
+**Kubernetes:**
+```yaml
+resources:
+  limits:
+    memory: "8Gi"
+    cpu: "4000m"
+```
+
+### KEDA Scaling
+
+```yaml
+# k8s/deployment-keda.yaml
+spec:
+  minReplicaCount: 0
+  maxReplicaCount: 50  # Mehr Worker erlauben
+  pollingInterval: 10   # Schneller reagieren
+
+  triggers:
+  - type: prometheus
+    metadata:
+      threshold: "2"  # Aggressiveres Scaling
+```
+
+### Jobrunr Settings
+
+```yaml
+env:
+- name: JOBRUNR_POLL_INTERVAL
+  value: "3"  # Schnelleres Polling
+- name: HIKARI_MAX_POOL_SIZE
+  value: "20"  # Größerer Connection Pool
+```
+
+## Interne Struktur
+
+- **Spring Boot 3.3.4** - Framework
+- **GWT 2.11** - Web UI
+- **Jobrunr 6.3.4** - Job Queue & Scheduling
+- **ilivalidator 1.14.3** - INTERLIS Validation
+- **SQLite** - Default Job Storage (PostgreSQL möglich)
+- **Micrometer + Prometheus** - Metrics
+
+### Module
+
+- `ilivalidator-web-service-shared` - Shared DTOs
+- `ilivalidator-web-service-client` - GWT Web UI
+- `ilivalidator-web-service-server` - Spring Boot Backend
+
+### Custom Functions
+
+Custom-Funktionen werden als normale Maven Dependencies definiert und via System Property registriert (siehe `Application.java`).
+
+## Migration & Updates
+
+### Image Update
+
+```bash
+# Docker Compose
+docker-compose pull
+docker-compose up -d
+
+# Kubernetes Rolling Update
+kubectl set image deployment/ilivalidator-frontend \
+  ilivalidator=sogis/ilivalidator-web-service:3.1.0 \
+  -n ilivalidator
+
+kubectl rollout status deployment/ilivalidator-frontend -n ilivalidator
+```
+
+### Config Update
+
+**Docker Compose:**
+```bash
+# docker-compose.yaml anpassen
+vim docker-compose.yaml
+
+# Neu starten
+docker-compose up -d
+```
+
+**Kubernetes:**
+```bash
+# ConfigMap anpassen
+kubectl edit configmap ilivalidator-config -n ilivalidator
+
+# Pods neu starten
+kubectl rollout restart deployment/ilivalidator-frontend -n ilivalidator
+kubectl rollout restart deployment/ilivalidator-worker -n ilivalidator
+```
+
+## Sicherheit
+
+### Credentials ändern
+
+**Docker Compose:**
+```yaml
+environment:
+  JOBRUNR_DASHBOARD_USER: "your-username"
+  JOBRUNR_DASHBOARD_PWD: "secure-password"
+```
+
+**Kubernetes Secrets:**
+```bash
+# Secret erstellen
+kubectl create secret generic jobrunr-creds \
+  --from-literal=username=admin \
+  --from-literal=password=secure-password \
+  -n ilivalidator
+
+# In Deployment referenzieren
+env:
+- name: JOBRUNR_DASHBOARD_USER
+  valueFrom:
+    secretKeyRef:
+      name: jobrunr-creds
+      key: username
+```
+
+## Externe Abhängigkeiten
+
+- INTERLIS Modell-Repositories (geo.so.ch, models.interlis.ch, models.geo.admin.ch)
+- Validierungs-Profile (ilidata-Repositories)
+
+## Lizenz
+
+Siehe [LICENSE](LICENSE)
+
+## Support
+
+- **Issues:** https://github.com/edigonzales/ilivalidator-web-service/issues
+- **Documentation:** [docs/](docs/)
+- **Kubernetes:** [k8s/README.md](k8s/README.md)

@@ -1,0 +1,114 @@
+# Minimal Prometheus Deployment für KEDA Autoscaling
+#
+# Dieser Prometheus-Server ist minimal konfiguriert und dient ausschließlich
+# dem Zweck, KEDA mit PromQL-Queries zu versorgen.
+#
+# Deploy mit: kubectl apply -f k8s/prometheus.yaml
+
+---
+# ConfigMap mit Prometheus-Konfiguration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-config
+  namespace: ilivalidator
+data:
+  prometheus.yml: |
+    global:
+      scrape_interval: 5s
+      evaluation_interval: 5s
+      external_labels:
+        cluster: 'ilivalidator'
+
+    scrape_configs:
+    - job_name: 'ilivalidator-frontend'
+      static_configs:
+      - targets: ['ilivalidator-frontend.ilivalidator.svc.cluster.local:8080']
+      metrics_path: '/actuator/prometheus'
+      scrape_interval: 5s
+      scrape_timeout: 3s
+
+---
+# Prometheus Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prometheus
+  namespace: ilivalidator
+  labels:
+    app: prometheus
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: prometheus
+  template:
+    metadata:
+      labels:
+        app: prometheus
+    spec:
+      containers:
+      - name: prometheus
+        image: prom/prometheus:v2.48.0
+        args:
+        - '--config.file=/etc/prometheus/prometheus.yml'
+        - '--storage.tsdb.path=/prometheus'
+        - '--storage.tsdb.retention.time=2h'
+        - '--web.enable-lifecycle'
+        ports:
+        - name: web
+          containerPort: 9090
+          protocol: TCP
+        volumeMounts:
+        - name: config
+          mountPath: /etc/prometheus
+        - name: storage
+          mountPath: /prometheus
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "200m"
+        livenessProbe:
+          httpGet:
+            path: /-/healthy
+            port: 9090
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /-/ready
+            port: 9090
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+      volumes:
+      - name: config
+        configMap:
+          name: prometheus-config
+      - name: storage
+        emptyDir: {}
+
+---
+# Prometheus Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: prometheus
+  namespace: ilivalidator
+  labels:
+    app: prometheus
+spec:
+  type: ClusterIP
+  selector:
+    app: prometheus
+  ports:
+  - name: web
+    port: 9090
+    targetPort: 9090
+    protocol: TCP

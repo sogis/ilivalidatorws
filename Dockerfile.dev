@@ -1,0 +1,77 @@
+# Multi-Stage Dockerfile für Development
+# Baut die komplette Applikation von Source und erstellt ein Runtime Image
+
+# Stage 1: Maven Build
+FROM eclipse-temurin:21.0.5_11-jdk-ubi9-minimal AS maven-builder
+
+# Install Maven
+RUN microdnf install -y maven
+
+WORKDIR /build
+
+# Copy Maven wrapper and pom files first (for layer caching)
+COPY .mvn/ .mvn/
+COPY mvnw .
+COPY pom.xml .
+COPY ilivalidator-web-service-shared/pom.xml ilivalidator-web-service-shared/
+COPY ilivalidator-web-service-client/pom.xml ilivalidator-web-service-client/
+COPY ilivalidator-web-service-server/pom.xml ilivalidator-web-service-server/
+
+# Download dependencies (cached layer)
+RUN ./mvnw dependency:go-offline -B || true
+
+# Copy source code
+COPY ilivalidator-web-service-shared/src/ ilivalidator-web-service-shared/src/
+COPY ilivalidator-web-service-client/src/ ilivalidator-web-service-client/src/
+COPY ilivalidator-web-service-server/src/ ilivalidator-web-service-server/src/
+
+# Build the application
+RUN ./mvnw clean package -DskipTests -Penv-prod
+
+# Stage 2: Extract JAR layers
+FROM eclipse-temurin:21.0.5_11-jre-ubi9-minimal AS jar-extractor
+
+WORKDIR /application
+COPY --from=maven-builder /build/ilivalidator-web-service-server/target/ilivalidator-web-service-server-*.jar application.jar
+RUN java -Djarmode=layertools -jar application.jar extract
+
+# Stage 3: Runtime Image
+FROM eclipse-temurin:21.0.5_11-jre-ubi9-minimal
+
+RUN microdnf update -y && \
+    microdnf reinstall tzdata -y
+
+ARG UID=1001
+RUN adduser -u $UID ilivalidator
+
+WORKDIR /work
+RUN chown $UID:0 . && \
+    chmod 0775 . && \
+    ls -la
+VOLUME ["/work"]
+
+ENV HOME=/ilivalidator
+WORKDIR $HOME
+
+RUN chown $UID:0 . && \
+    chmod 0775 . && \
+    ls -la
+VOLUME ["/ilivalidator"]
+
+WORKDIR /application
+
+RUN chown $UID:0 . && \
+    chmod 0775 . && \
+    ls -la
+
+COPY --chown=$UID:0 --chmod=0775 --from=jar-extractor /application/dependencies/ ./
+COPY --chown=$UID:0 --chmod=0775 --from=jar-extractor /application/spring-boot-loader/ ./
+COPY --chown=$UID:0 --chmod=0775 --from=jar-extractor /application/snapshot-dependencies/ ./
+COPY --chown=$UID:0 --chmod=0775 --from=jar-extractor /application/application/ ./
+
+USER $UID
+
+ENV LOG4J_FORMAT_MSG_NO_LOOKUPS=true
+ENTRYPOINT ["java", "-XX:+UseG1GC", "-XX:InitialRAMPercentage=10", "-XX:MaxRAMPercentage=90.0", "-XX:G1PeriodicGCInterval=30000", "-XX:+ExplicitGCInvokesConcurrent", "-XX:MaxMetaspaceSize=256m", "-Xss256k", "org.springframework.boot.loader.launch.JarLauncher", "--spring.profiles.active=docker"]
+
+EXPOSE 8080 8000

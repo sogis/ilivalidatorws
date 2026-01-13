@@ -1,0 +1,46 @@
+# Git
+.git/
+.gitignore
+.github/
+
+# Maven Build Output (aber nicht source files!)
+**/target/
+!**/target/*.jar
+
+# IDE
+.idea/
+.vscode/
+*.iml
+.classpath
+.project
+.settings/
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker
+docker-compose*.yaml
+Dockerfile.jvm
+Dockerfile.cds
+Dockerfile.jvm-non-layered
+.dockerignore
+
+# Documentation (für dev builds nicht relevant)
+*.md
+!pom.xml
+docs/
+
+# Test Data (bei dev builds nicht kopieren)
+test-data/
+**/src/test/data/*.xtf
+**/src/test/data/*.xml
+**/src/test/data/*.zip
+
+# Temporary
+tmp/
+temp/
+work/
