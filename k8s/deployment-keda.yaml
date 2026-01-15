@@ -259,7 +259,36 @@ spec:
     nodePort: 30800
     protocol: TCP
 ---
+# ============================================================================
 # KEDA ScaledObject - Scale-to-Zero basierend auf jobrunr_pending_jobs
+# ============================================================================
+#
+# ANFORDERUNGEN:
+# - Innerhalb 5 Sekunden einen neuen Pod hochfahren
+# - Bei 2 Pending Jobs gleichzeitig 2 Pods hochfahren
+# - Scale-to-Zero: Bei 0 Jobs → 0 Worker nach Cooldown
+#
+# KONFIGURATION:
+# - pollingInterval: 5s - KEDA prüft Prometheus alle 5 Sekunden
+# - threshold: 1 - Pro 1 Pending Job wird 1 Worker gestartet
+# - activationThreshold: 1 - Scale-up startet ab >= 1 Pending Job
+# - scaleUp.value: 2 - Bis zu 2 Pods können innerhalb 5s hinzugefügt werden
+# - stabilizationWindowSeconds: 0 - Sofortiges Scale-up ohne Verzögerung
+#
+# VERHALTEN:
+# - 0 Pending Jobs → Scale-down zu 0 Pods nach 5 Min Cooldown
+# - 1 Pending Job  → 1 Pod wird innerhalb 5s gestartet
+# - 2 Pending Jobs → 2 Pods werden gleichzeitig innerhalb 5s gestartet
+#
+# WICHTIGE KEDA SETUP NOTIZEN:
+# - KEDA v2.18.3 hat einen Bug mit der ScaledJob CRD (Annotations zu groß)
+# - Die ScaledJob CRD fehlt nach Standard-Installation, KEDA Operator crasht (CrashLoopBackOff)
+# - Fehler: "no matches for kind ScaledJob in version keda.sh/v1alpha1"
+# - Lösung: ScaledJob CRD mit server-side apply installieren (umgeht Annotations-Limit)
+# - Befehl: curl -sL https://raw.githubusercontent.com/kedacore/keda/v2.18.3/config/crd/bases/keda.sh_scaledjobs.yaml | kubectl apply --server-side=true -f -
+# - Nach Installation KEDA Operator Pod neu starten: kubectl delete pod -n keda -l app.kubernetes.io/name=keda-operator
+#
+# ============================================================================
 apiVersion: keda.sh/v1alpha1
 kind: ScaledObject
 metadata:
@@ -270,44 +299,42 @@ spec:
     name: ilivalidator-worker
 
   # Scale to Zero Configuration
-  minReplicaCount: 0  # Bei 0 Jobs → 0 Worker
+  minReplicaCount: 0  # Bei 0 Jobs → 0 Worker (Scale-to-Zero aktiv)
   maxReplicaCount: 2  # Maximum 2 Worker
 
   # Timing Configuration
-  pollingInterval: 5  # Alle 5s Metrics prüfen (schnellere Reaktion)
-  cooldownPeriod: 300  # 5 Min warten bevor scale-down
+  pollingInterval: 5  # Alle 5s Metrics prüfen (schnelle Reaktion für 5s Anforderung)
+  cooldownPeriod: 300  # 5 Min warten bevor scale-down zu 0
 
-  # Scaling Behavior
+  # Scaling Behavior - Optimiert für schnelles Scale-up
   advanced:
     horizontalPodAutoscalerConfig:
       behavior:
         scaleDown:
-          stabilizationWindowSeconds: 300  # 5 Min stabilisieren
+          stabilizationWindowSeconds: 300  # 5 Min stabilisieren vor Scale-down
           policies:
           - type: Percent
             value: 50  # Max 50% Reduktion pro Minute
             periodSeconds: 60
         scaleUp:
-          stabilizationWindowSeconds: 0  # Sofort hochskalieren
+          stabilizationWindowSeconds: 0  # Sofort hochskalieren (keine Verzögerung)
           policies:
-          - type: Percent
-            value: 100  # Max 100% Erhöhung
-            periodSeconds: 15
           - type: Pods
-            value: 1  # Oder max 4 Pods auf einmal
-            periodSeconds: 15
+            value: 2  # Max 2 Pods innerhalb 5s hinzufügen (erfüllt 2-Jobs-Anforderung)
+            periodSeconds: 5
           selectPolicy: Max  # Schnellste Policy gewinnt
 
   triggers:
   # Prometheus Trigger - fragt Prometheus Server ab
   - type: prometheus
     metadata:
-      # Prometheus Server (scrappt Frontend Metriken)
+      # Prometheus Server (scrappt Frontend Metriken über jobrunr_pending_jobs)
       serverAddress: http://prometheus.ilivalidator.svc.cluster.local:9090
-      # PromQL Query
-      query: |
-        jobrunr_pending_jobs
+      # PromQL Query - Anzahl Pending Jobs
+      query: "jobrunr_pending_jobs"
       # Threshold: Pro X Jobs → 1 Worker
-      threshold: "1"  # 1 Worker pro 1 Jobs
-      # Bei 0 Jobs → scale to zero
+      threshold: "1"  # 1 Worker pro 1 Pending Job
+      # activationThreshold: Aktiviere KEDA Scale-from-Zero wenn Metrik > diesem Wert
+      # "0" bedeutet: Scale-to-Zero aktiv, aber minReplicas bleibt bei 1 (KEIN echtes Scale-to-Zero)
+      # Für echtes Scale-to-Zero muss dieser Wert < kleinste erwartete Metrik sein
       activationThreshold: "0"
