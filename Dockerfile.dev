@@ -17,16 +17,16 @@ COPY ilivalidator-web-service-shared/pom.xml ilivalidator-web-service-shared/
 COPY ilivalidator-web-service-client/pom.xml ilivalidator-web-service-client/
 COPY ilivalidator-web-service-server/pom.xml ilivalidator-web-service-server/
 
-# Download dependencies (cached layer)
-RUN ./mvnw dependency:go-offline -B || true
-
-# Copy source code
+# Download dependencies and build shared module first (cached layer)
 COPY ilivalidator-web-service-shared/src/ ilivalidator-web-service-shared/src/
+RUN ./mvnw install -pl ilivalidator-web-service-shared -am -DskipTests
+
+# Copy remaining source code
 COPY ilivalidator-web-service-client/src/ ilivalidator-web-service-client/src/
 COPY ilivalidator-web-service-server/src/ ilivalidator-web-service-server/src/
 
-# Build the application
-RUN ./mvnw clean package -DskipTests -Penv-prod
+# Build the application (skip docker build within docker)
+RUN ./mvnw clean package -DskipTests -Penv-prod -Dskip.docker.build=true
 
 # Stage 2: Extract JAR layers
 FROM eclipse-temurin:21.0.5_11-jre-ubi9-minimal AS jar-extractor
