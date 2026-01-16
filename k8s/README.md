@@ -15,15 +15,20 @@ Kubernetes-spezifische Dokumentation für ilivalidator-web-service. Für allgeme
 # Standard (ohne KEDA)
 kubectl apply -f k8s/deployment-base.yaml
 
-# Mit KEDA Autoscaling
-# 1. KEDA installieren
+# Mit KEDA v2 Autoscaling
+# 1. KEDA v2 installieren
+helm repo add kedacore https://kedacore.github.io/charts
 helm install keda kedacore/keda --namespace keda --create-namespace
 
 # 2. Prometheus deployen (für KEDA Metrics)
 kubectl apply -f k8s/prometheus.yaml
 
-# 3. KEDA Deployment
+# 3. KEDA Deployment (verwendet KEDA v2 Features)
 kubectl apply -f k8s/deployment-keda.yaml
+
+# 4. Verify
+kubectl get scaledobject -n ilivalidator
+kubectl get pods -n ilivalidator
 ```
 
 ## Voraussetzungen
@@ -52,9 +57,9 @@ kubectl describe storageclass <name>
 - NFS Server aufsetzen
 - Auf PostgreSQL statt SQLite wechseln
 
-### KEDA (nur für deployment-keda.yaml)
+### KEDA v2 (nur für deployment-keda.yaml)
 
-**Installation:**
+**Installation (empfohlene Version: v2.14+):**
 ```bash
 helm repo add kedacore https://kedacore.github.io/charts
 helm repo update
@@ -62,7 +67,27 @@ helm install keda kedacore/keda --namespace keda --create-namespace
 
 # Verify
 kubectl get pods -n keda
+kubectl get scaledobjects -A
 ```
+
+**Upgrade von älteren KEDA Versionen:**
+```bash
+# Bestehende Version prüfen
+helm list -n keda
+
+# Upgrade auf neueste v2.x
+helm upgrade keda kedacore/keda --namespace keda
+
+# Falls KEDA Operator nach Upgrade crasht (ScaledJob CRD Bug):
+curl -sL https://raw.githubusercontent.com/kedacore/keda/v2.18.3/config/crd/bases/keda.sh_scaledjobs.yaml | kubectl apply --server-side=true -f -
+kubectl delete pod -n keda -l app.kubernetes.io/name=keda-operator
+```
+
+**KEDA v2 Features (genutzt in deployment-keda.yaml):**
+- `idleReplicaCount`: Explizite Idle-Replicas für saubereres Scale-to-Zero
+- `fallback`: Automatischer Fallback zu 1 Worker bei Prometheus-Ausfall
+- `ignoreNullValues`: Verhindert falschen Scale-down bei fehlenden Metriken
+- `restoreToOriginalReplicaCount`: Kontrolliert Rückkehr zu Deployment-Replicas
 
 ### Prometheus (nur für deployment-keda.yaml)
 
@@ -119,19 +144,43 @@ resources:
     cpu: "4000m"
 ```
 
-### KEDA Scaling anpassen
+### KEDA v2 Scaling anpassen
 
 ```yaml
-# In deployment-keda.yaml
+# In deployment-keda.yaml ScaledObject
 spec:
+  # Replicas
   minReplicaCount: 0
-  maxReplicaCount: 10  # Mehr Worker
-  pollingInterval: 10   # Schnelleres Polling
+  idleReplicaCount: 0   # KEDA v2: Explizite Idle-Replicas
+  maxReplicaCount: 10   # Mehr Worker
+
+  # Timing
+  pollingInterval: 10   # Schnelleres Polling (Sekunden)
+  cooldownPeriod: 60    # Schnellerer Scale-down (Sekunden)
+
+  # Fallback (KEDA v2)
+  fallback:
+    failureThreshold: 3
+    replicas: 2         # Bei Prometheus-Ausfall → 2 Worker
+
+  # Advanced (KEDA v2)
+  advanced:
+    restoreToOriginalReplicaCount: false
+    horizontalPodAutoscalerConfig:
+      behavior:
+        scaleUp:
+          stabilizationWindowSeconds: 0
+          policies:
+          - type: Pods
+            value: 5    # Schnelleres Scale-up: +5 Pods
+            periodSeconds: 5
 
   triggers:
   - type: prometheus
     metadata:
-      threshold: "2"  # Aggressiveres Scaling (1 Worker pro 2 Jobs)
+      threshold: "2"              # 1 Worker pro 2 Jobs
+      activationThreshold: "0.5"  # Scale-to-Zero Trigger
+      ignoreNullValues: "true"    # KEDA v2: Ignore fehlende Metriken
 ```
 
 ## Monitoring
@@ -275,23 +324,46 @@ kubectl get pv
 kubectl get events -n ilivalidator --sort-by='.lastTimestamp'
 ```
 
-### KEDA skaliert nicht
+### KEDA v2 skaliert nicht
 
 ```bash
-# 1. Metrics verfügbar?
+# 1. KEDA Version prüfen
+helm list -n keda
+kubectl get pods -n keda
+
+# 2. ScaledObject Status (KEDA v2 zeigt fallback, activationThreshold)
+kubectl describe scaledobject ilivalidator-worker-scaler -n ilivalidator
+
+# 3. HPA Status (von KEDA erstellt)
+kubectl get hpa -n ilivalidator
+kubectl describe hpa keda-hpa-ilivalidator-worker -n ilivalidator
+
+# 4. Metrics verfügbar?
 kubectl exec -it deployment/ilivalidator-frontend -n ilivalidator -- \
   curl localhost:8080/actuator/prometheus | grep jobrunr_pending_jobs
 
-# 2. KEDA kann Frontend erreichen?
+# 5. Prometheus Query testen
+kubectl port-forward -n ilivalidator svc/prometheus 9090:9090
+# Browser: http://localhost:9090 → Query: jobrunr_pending_jobs
+
+# 6. KEDA kann Prometheus erreichen?
 kubectl run -it --rm debug --image=curlimages/curl --restart=Never -n ilivalidator -- \
-  curl http://ilivalidator-frontend:8080/actuator/prometheus
+  curl http://prometheus.ilivalidator.svc.cluster.local:9090/api/v1/query?query=jobrunr_pending_jobs
 
-# 3. ScaledObject Status
-kubectl describe scaledobject ilivalidator-worker-scaler -n ilivalidator
+# 7. KEDA Operator Logs (KEDA v2 zeigt detaillierte Trigger-Events)
+kubectl logs -n keda deployment/keda-operator --tail=100 -f
 
-# 4. KEDA Operator Logs
-kubectl logs -n keda deployment/keda-operator --tail=100
+# 8. KEDA Metrics Server Logs
+kubectl logs -n keda deployment/keda-metrics-apiserver --tail=100
+
+# 9. KEDA v2 Events prüfen
+kubectl get events -n ilivalidator --field-selector involvedObject.name=ilivalidator-worker-scaler
 ```
+
+**Häufige KEDA v2 Probleme:**
+- `activationThreshold: "0"` verhindert Scale-to-Zero → auf `"0.5"` ändern
+- Prometheus nicht erreichbar → Fallback-Replicas werden genutzt
+- `ignoreNullValues: false` → Scale-down bei fehlenden Metriken
 
 ### Worker Pods löschen nicht
 

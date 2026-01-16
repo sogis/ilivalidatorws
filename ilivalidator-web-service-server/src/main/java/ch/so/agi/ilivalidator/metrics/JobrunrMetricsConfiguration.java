@@ -2,11 +2,16 @@ package ch.so.agi.ilivalidator.metrics;
 
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;
+import org.jobrunr.storage.BackgroundJobServerStatus;
 import org.jobrunr.storage.JobStats;
 import org.jobrunr.storage.StorageProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Configuration;
+
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.List;
 
 /**
  * Exposes Jobrunr metrics to Prometheus via Spring Boot Actuator.
@@ -77,6 +82,33 @@ public class JobrunrMetricsConfiguration {
                 }
             })
             .description("Total number of failed Jobrunr jobs")
+            .register(registry);
+
+        // Active workers (registered BackgroundJobServers with recent heartbeat)
+        Gauge.builder("jobrunr_active_workers", storageProvider, sp -> {
+                try {
+                    List<BackgroundJobServerStatus> servers = sp.getBackgroundJobServers();
+                    if (servers == null || servers.isEmpty()) {
+                        return 0.0;
+                    }
+
+                    // Count workers with heartbeat in last 30 seconds
+                    Instant now = Instant.now();
+                    long activeWorkers = servers.stream()
+                        .filter(server -> {
+                            Instant lastHeartbeat = server.getLastHeartbeat();
+                            long secondsSinceHeartbeat = ChronoUnit.SECONDS.between(lastHeartbeat, now);
+                            return secondsSinceHeartbeat < 30;
+                        })
+                        .count();
+
+                    return (double) activeWorkers;
+                } catch (Exception e) {
+                    log.error("Error getting active workers count", e);
+                    return 0.0;
+                }
+            })
+            .description("Number of active Jobrunr workers (BackgroundJobServers with recent heartbeat)")
             .register(registry);
 
         log.info("Jobrunr metrics registered successfully");

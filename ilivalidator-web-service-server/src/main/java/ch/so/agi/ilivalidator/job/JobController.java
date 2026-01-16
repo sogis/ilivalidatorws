@@ -30,43 +30,49 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import ch.so.agi.ilivalidator.profile.ProfileProperties;
 import ch.so.agi.ilivalidator.storage.StorageService;
+import ch.so.agi.ilivalidator.worker.WorkerStatus;
+import ch.so.agi.ilivalidator.worker.WorkerStatusService;
 
 @ConditionalOnProperty(
-        value="app.restApiEnabled", 
-        havingValue = "true", 
+        value="app.restApiEnabled",
+        havingValue = "true",
         matchIfMissing = false)
 @RestController
 public class JobController {
     private final Logger log = LoggerFactory.getLogger(this.getClass());
-    
+
     private static final String PATH_TO_LOG_API = "api/logs";
-    
+
     @Value("${app.folderPrefix}")
     private String folderPrefix;
-    
+
     private Map<String,String> profiles;
 
     private StorageService storageService;
-    
+
     private JobScheduler jobScheduler;
-    
+
     private JobService jobService;
-    
+
     private StorageProvider storageProvider;
+
+    private WorkerStatusService workerStatusService;
 
     public JobController(
             @Value("${app.folderPrefix}") String folderPrefix,
-            ProfileProperties profileProperties, 
-            StorageService storageService, 
-            JobScheduler jobScheduler, 
+            ProfileProperties profileProperties,
+            StorageService storageService,
+            JobScheduler jobScheduler,
             JobService jobService,
-            StorageProvider storageProvider) {
+            StorageProvider storageProvider,
+            WorkerStatusService workerStatusService) {
         this.folderPrefix = folderPrefix;
         this.profiles = profileProperties.getProfiles();
         this.storageService = storageService;
         this.jobScheduler = jobScheduler;
         this.jobService = jobService;
         this.storageProvider = storageProvider;
+        this.workerStatusService = workerStatusService;
     }
 
     // @RequestPart anstelle von @RequestParam und @RequestBody damit swagger korrekt funktioniert.
@@ -90,13 +96,30 @@ public class JobController {
         }
 
         jobScheduler.enqueue(UUID.fromString(jobId), () -> jobService.validate(JobContext.Null, uploadedFiles, profileString));
-        
+
+        // Check if workers are ready (useful for scale-to-zero scenarios)
+        WorkerStatus workerStatus = workerStatusService.getWorkerStatus();
+
+        if (!workerStatus.isAvailable()) {
+            log.info("<{}> Job enqueued but no workers available yet. Workers may be scaling up.", jobId);
+        }
+
         return ResponseEntity
                 .accepted()
                 .header("Operation-Location", getHost()+"/api/jobs/"+jobId)
+                .header("X-Workers-Available", String.valueOf(workerStatus.isAvailable()))
+                .header("X-Active-Worker-Count", String.valueOf(workerStatus.activeWorkerCount()))
                 .body(null);        
     }
     
+    @GetMapping("/api/workers/status")
+    public ResponseEntity<WorkerStatus> getWorkerStatus() {
+        WorkerStatus status = workerStatusService.getWorkerStatus();
+        log.debug("Worker status check: available={}, count={}, message={}",
+                status.isAvailable(), status.activeWorkerCount(), status.message());
+        return ResponseEntity.ok(status);
+    }
+
     @GetMapping("/api/jobs/{jobId}")
     public ResponseEntity<?> getJobById(@PathVariable("jobId") String jobId) throws IOException {
         try {
