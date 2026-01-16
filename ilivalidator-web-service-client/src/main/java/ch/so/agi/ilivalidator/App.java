@@ -53,6 +53,8 @@ public class App implements EntryPoint {
     private static final String API_ENDPOINT_JOBS = "/api/jobs";
     private static final String API_ENDPOINT_PROFILES = "/api/profiles";
     private static final String HEADER_OPERATION_LOCATION = "Operation-Location";
+    private static final String HEADER_WORKER_AVAILABLE = "X-Workers-Available";
+    private static final String HEADER_WORKER_COUNT = "X-Active-Worker-Count";
 
     private Timer apiTimer;
     private static final int API_REQUEST_PERIOD_MILLIS = 5000;
@@ -208,6 +210,15 @@ public class App implements EntryPoint {
                     String jobUrl = response.headers.get(HEADER_OPERATION_LOCATION);
                     console.log(jobUrl);
                     
+                    // Prüfung, ob überhaupt worker bereit sind
+                    Boolean workersAvailable = "true".equals(response.headers.get(HEADER_WORKER_AVAILABLE));
+                    int workerCount = Integer.parseInt(response.headers.get(HEADER_WORKER_COUNT));
+                    if (!workersAvailable) {
+                        logMessage("Bitte warten: Worker wird gestartet (<20 Sekunden) ...");                    
+                    } 
+                    console.log("Worker verfügbar: " + workersAvailable);
+                    console.log("Worker Count: " + workerCount);
+
                     if (apiTimer != null) {
                         apiTimer.cancel();
                     }

@@ -1,0 +1,55 @@
+# Schnelles Dockerfile für lokale Development
+# Setzt voraus, dass das JAR bereits mit Maven gebaut wurde
+#
+# Verwendung:
+#   1. ./mvnw clean package -DskipTests -Penv-prod
+#   2. docker build -f Dockerfile.local -t ilivalidator-web-service:local .
+
+# Stage 1: Extract JAR layers
+FROM eclipse-temurin:21.0.5_11-jre-ubi9-minimal AS builder
+
+WORKDIR /application
+ARG JAR_FILE=ilivalidator-web-service-server/target/ilivalidator-web-service-server-*.jar
+COPY ${JAR_FILE} application.jar
+RUN java -Djarmode=layertools -jar application.jar extract
+
+# Stage 2: Runtime Image
+FROM eclipse-temurin:21.0.5_11-jre-ubi9-minimal
+
+RUN microdnf update -y && \
+    microdnf reinstall tzdata -y
+
+ARG UID=1001
+RUN adduser -u $UID ilivalidator
+
+WORKDIR /work
+RUN chown $UID:0 . && \
+    chmod 0775 . && \
+    ls -la
+VOLUME ["/work"]
+
+ENV HOME=/ilivalidator
+WORKDIR $HOME
+
+RUN chown $UID:0 . && \
+    chmod 0775 . && \
+    ls -la
+VOLUME ["/ilivalidator"]
+
+WORKDIR /application
+
+RUN chown $UID:0 . && \
+    chmod 0775 . && \
+    ls -la
+
+COPY --chown=$UID:0 --chmod=0775 --from=builder /application/dependencies/ ./
+COPY --chown=$UID:0 --chmod=0775 --from=builder /application/spring-boot-loader/ ./
+COPY --chown=$UID:0 --chmod=0775 --from=builder /application/snapshot-dependencies/ ./
+COPY --chown=$UID:0 --chmod=0775 --from=builder /application/application/ ./
+
+USER $UID
+
+ENV LOG4J_FORMAT_MSG_NO_LOOKUPS=true
+ENTRYPOINT ["java", "-XX:+UseG1GC", "-XX:InitialRAMPercentage=10", "-XX:MaxRAMPercentage=90.0", "-XX:G1PeriodicGCInterval=30000", "-XX:+ExplicitGCInvokesConcurrent", "-XX:MaxMetaspaceSize=256m", "-Xss256k", "org.springframework.boot.loader.launch.JarLauncher", "--spring.profiles.active=docker"]
+
+EXPOSE 8080 8000

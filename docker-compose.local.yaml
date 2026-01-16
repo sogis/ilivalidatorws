@@ -1,0 +1,102 @@
+# Docker Compose Setup für lokale Development mit vorgebautem JAR
+#
+# Schnellere Alternative zu docker-compose.dev.yaml wenn JAR bereits existiert
+#
+# Voraussetzung:
+#   ./mvnw clean package -DskipTests -Penv-prod
+#
+# Verwendung:
+#   Build:    docker-compose -f docker-compose.local.yaml build
+#   Start:    docker-compose -f docker-compose.local.yaml up -d
+#   Scale:    docker-compose -f docker-compose.local.yaml up -d --scale worker=5
+#   Stop:     docker-compose -f docker-compose.local.yaml down
+#   Rebuild:  docker-compose -f docker-compose.local.yaml up -d --build
+
+
+services:
+  # Frontend - REST API, Dashboard, Metrics
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.local
+    image: ilivalidator-web-service:local
+    container_name: ilivalidator-frontend-local
+    restart: unless-stopped
+    environment:
+      TZ: Europe/Zurich
+      LOG_LEVEL_APPLICATION: DEBUG
+      JOBRUNR_SERVER_ENABLED: "false"
+      REST_API_ENABLED: "true"
+      JOBRUNR_DASHBOARD_ENABLED: "true"
+      JOBRUNR_DASHBOARD_USER: admin
+      JOBRUNR_DASHBOARD_PWD: admin
+      CLEANER_ENABLED: "true"
+      TOMCAT_THREADS_MAX: 20
+      TOMCAT_ACCEPT_COUNT: 100
+      TOMCAT_MAX_CONNECTIONS: 500
+      HIKARI_MAX_POOL_SIZE: 10
+      ILIDIRS: "https://geo.so.ch/models;https://models.interlis.ch;https://models.geo.admin.ch"
+      MAX_FILE_SIZE: 200
+      CONNECT_TIMEOUT: 5000
+      READ_TIMEOUT: 5000
+      SPRING_DEVTOOLS_RESTART_ENABLED: "false"
+      SPRING_DEVTOOLS_LIVERELOAD_ENABLED: "false"
+    ports:
+      - "8080:8080"
+      - "8000:8000"
+    volumes:
+      - work-data:/work
+    networks:
+      - ilivalidator-net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # Worker - Background Job Processing
+  worker:
+    image: ilivalidator-web-service:local
+    restart: unless-stopped
+    environment:
+      TZ: Europe/Zurich
+      LOG_LEVEL_APPLICATION: DEBUG
+      JOBRUNR_SERVER_ENABLED: "true"
+      JOBRUNR_POLL_INTERVAL: 5
+      JOBRUNR_WORKER_COUNT: 1
+      REST_API_ENABLED: "false"
+      JOBRUNR_DASHBOARD_ENABLED: "false"
+      CLEANER_ENABLED: "false"
+      ILIDIRS: "https://geo.so.ch/models;https://models.interlis.ch;https://models.geo.admin.ch"
+      CONNECT_TIMEOUT: 5000
+      READ_TIMEOUT: 5000
+    volumes:
+      - work-data:/work
+    networks:
+      - ilivalidator-net
+    depends_on:
+      - frontend
+    deploy:
+      replicas: 2
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '0.5'
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+volumes:
+  work-data:
+    driver: local
+
+networks:
+  ilivalidator-net:
+    driver: bridge
