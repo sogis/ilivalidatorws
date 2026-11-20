@@ -32,12 +32,6 @@ jobs:
           ./mvnw -Penv-test clean test -DexcludedGroups=docker -Dapi.version=1.44
           ./mvnw -Penv-prod package -DskipTests
 
-      - uses: actions/upload-artifact@v7
-        if: failure()
-        with:
-          name: reports-jar
-          path: ilivalidator-web-service-server/target/surefire-reports/
-
       - name: Test locally built Docker image
         run: |
           docker image inspect --format '{{.Id}}' sogis/ilivalidator-web-service:latest
@@ -46,7 +40,7 @@ jobs:
       - uses: actions/upload-artifact@v7
         if: failure()
         with:
-          name: reports-docker
+          name: reports-tests
           path: ilivalidator-web-service-server/target/surefire-reports/
 
       - uses: docker/setup-qemu-action@v4
