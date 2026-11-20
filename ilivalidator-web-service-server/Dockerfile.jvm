@@ -1,46 +1,12 @@
-FROM eclipse-temurin:21.0.5_11-jre-ubi9-minimal AS builder
+FROM registry.access.redhat.com/ubi9/openjdk-21-runtime:1.24
 
-WORKDIR application
-ARG JAR_FILE=target/ilivalidator-web-service-server-*.jar
-COPY ${JAR_FILE} application.jar
-RUN java -Djarmode=layertools -jar application.jar extract
+USER 0
+RUN install -d -o 0 -g 0 -m 0770 /work
+WORKDIR /opt/app
+COPY --chown=0:0 --chmod=0444 target/ilivalidator-web-service-server-*.jar ./application.jar
 
-
-FROM eclipse-temurin:21.0.5_11-jre-ubi9-minimal
-
-RUN microdnf update -y && \
-    microdnf reinstall tzdata -y
-
-ARG UID=1001
-RUN adduser -u $UID ilivalidator 
-
-WORKDIR /work
-RUN chown $UID:0 . && \
-    chmod 0775 . && \
-    ls -la
+ENV ILI_CACHE=/tmp/ilicache
 VOLUME ["/work"]
+USER 1001:0
 
-ENV HOME=/ilivalidator
-WORKDIR $HOME
-
-RUN chown $UID:0 . && \
-    chmod 0775 . && \
-    ls -la
-VOLUME ["/ilivalidator"]
-
-WORKDIR application
-
-RUN chown $UID:0 . && \
-    chmod 0775 . && \
-    ls -la
-
-COPY --chown=$UID:0 --chmod=0775 --from=builder application/dependencies/ ./
-COPY --chown=$UID:0 --chmod=0775 --from=builder application/spring-boot-loader/ ./
-COPY --chown=$UID:0 --chmod=0775 --from=builder application/snapshot-dependencies/ ./
-COPY --chown=$UID:0 --chmod=0775 --from=builder application/application/ ./
-
-USER $UID
-
-ENV LOG4J_FORMAT_MSG_NO_LOOKUPS=true
-#ENTRYPOINT ["java", "-XX:+UseParallelGC", "-XX:MaxRAMPercentage=90.0", "org.springframework.boot.loader.launch.JarLauncher", "--spring.profiles.active=docker"]
-ENTRYPOINT ["java", "-XX:+UseG1GC", "-XX:InitialRAMPercentage=10", "-XX:MaxRAMPercentage=90.0", "-XX:G1PeriodicGCInterval=30000", "-XX:+ExplicitGCInvokesConcurrent", "-XX:MaxMetaspaceSize=256m", "-Xss256k", "org.springframework.boot.loader.launch.JarLauncher", "--spring.profiles.active=docker"]
+ENTRYPOINT ["java", "-XX:+UseG1GC", "-XX:InitialRAMPercentage=10", "-XX:MaxRAMPercentage=90.0", "-XX:G1PeriodicGCInterval=30000", "-XX:+ExplicitGCInvokesConcurrent", "-XX:MaxMetaspaceSize=256m", "-Xss256k", "-jar", "/opt/app/application.jar", "--spring.profiles.active=docker"]

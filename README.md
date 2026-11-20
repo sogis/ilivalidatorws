@@ -47,10 +47,11 @@ Konfiguration via _application.properties_ im Verzeichnis in dem der Service ges
 
 Die Anwendung beinhaltet bereits eine _application.properties_-Datei. Siehe [application.properties](src/main/resources/application.properties), welche beim obigen Aufruf standardmässig verwendet wird.
 
-Der Dockercontainer verwendet eine leicht angepasste Konfiguration ([application-docker.properties](src/main/resources/application-docker.properties)), damit das Mounten von Verzeichnissen hoffentlich einfacher fällt und weniger Fehler passieren:
+Das Container-Image startet das Maven-JAR unter `/opt/app/application.jar` mit Java 21 und dem [Docker-Profil](ilivalidator-web-service-server/src/main/resources/application-docker.properties).
 
-- Die SQLite-Datenbank wird im _/work_-Verzeichnis angelegt, das im Dockerimage angelegt wird.
-- Für `WORK_DIRECTORY` wird das _/work_-Verzeichnis verwendet, das im Dockerimage angelegt wird.
+- Das Volume `/work` enthält standardmässig die SQLite-Datenbank `jobrunr_db.sqlite`, Uploads und Validierungsdateien. Eingehängte Volumes müssen für die effektive Container-UID oder deren Gruppe beschreibbar sein.
+- Bei schreibgeschütztem Root-Dateisystem braucht der Container zusätzlich ein beschreibbares `/tmp`, aus dem SQLite seine native Bibliothek laden kann. Dort liegt standardmässig auch der INTERLIS-Modellcache (`ILI_CACHE=/tmp/ilicache`).
+- Wer externe Spring-Konfiguration unter `/ilivalidator/application` oder dessen `config`-Unterverzeichnis mountet, muss den Mount beim Rollout prüfen. Spring sucht relativ zum neuen Arbeitsverzeichnis `/opt/app`. Ein anderer Mount-Pfad lässt sich über `SPRING_CONFIG_ADDITIONAL_LOCATION` angeben.
 
 Die allermeisten Optionen sind via Umgebungsvariablen exponiert und somit veränderbar. Im Extremfall kann immer noch ein neues Dockerimage erstellt werden mit einer ganz eigenen Konfiguration.
 
@@ -189,21 +190,24 @@ Or without downloading all the snapshots again:
 ### Build
 
 ```
-./mvnw -Penv-prod clean package -DexcludedGroups="docker"
+./mvnw -Penv-prod package -DskipTests
 ```
 
-In der Package-Phase werden die "Spring pur"-Tests durchgeführt und es wird am Ende ein Dockerimage für die Dockertests erstellt. Die definitiven Dockerimages werden wegen des Multi-Arch-Builds in der Pipeline erstellt und publiziert. Die Tests können auch separat ausgeführt werden.
+Das Profil erstellt das ausführbare JAR und baut daraus das lokale Image für die Docker-Tests. Die CI führt zuerst die Spring-Tests und nach dem Packaging die Docker-Tests aus. Der Release-Job verwendet das JAR aus demselben CI-Lauf für beide Zielarchitekturen.
 
 Maven kennt Integrationtests in der Verify-Phase (nach Package). Wir verwenden jedoch nochmals eine separate Testphase, um die Dockertests durchzuführen (siehe nachfolgendes Kapitel).
 
 ### Tests
 
 ```
-./mvnw -Penv-test clean test -DexcludedGroups="docker"
+./mvnw -Penv-test clean test -DexcludedGroups="docker" -Dapi.version=1.44
 ```
 
+Die Docker-Tests verwenden das lokale Image `sogis/ilivalidator-web-service:latest` aus dem `env-prod`-Build. Vor dem Test die lokale Image-ID prüfen.
+
 ```
-./mvnw -Penv-test clean test -Dgroups="docker"
+docker image inspect --format '{{.Id}}' sogis/ilivalidator-web-service:latest
+./mvnw -Penv-test test -Dgroups="docker" -Dapi.version=1.44
 ```
 
 Einzelner Test ausführen:

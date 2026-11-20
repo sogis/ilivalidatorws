@@ -2,113 +2,135 @@ name: CI/CD
 
 on:
   workflow_dispatch:
+  pull_request:
   push:
+    branches: [main]
     paths-ignore:
       - '**.md'
 
+permissions:
+  contents: read
+
 jobs:
-
   build-jvm:
-    env:
-      DOCKER_ACCOUNT: sogis
-      DOCKER_REPO: ilivalidator-web-service
-      DOCKER_PASSWORD: ${{secrets.DOCKER_PASSWORD}}
-      DOCKER_USERNAME: ${{secrets.DOCKER_USERNAME}} 
-      BUILD_NUMBER: ${{ github.run_number }}
-      MAJOR_NUMBER: "3"
-      MINOR_NUMBER: "0"
+    runs-on: ubuntu-latest
 
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - uses: actions/setup-java@v6
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: 'maven'
+
+      - name: Test and build JAR
+        run: |
+          ./mvnw -Penv-test clean test -DexcludedGroups=docker -Dapi.version=1.44
+          ./mvnw -Penv-prod package -DskipTests
+
+      - name: Test locally built Docker image
+        run: |
+          docker image inspect --format '{{.Id}}' sogis/ilivalidator-web-service:latest
+          ./mvnw test -Dgroups=docker -Dapi.version=1.44
+
+      - uses: actions/upload-artifact@v7
+        if: failure()
+        with:
+          name: reports-tests
+          path: ilivalidator-web-service-server/target/surefire-reports/
+
+      - uses: docker/setup-qemu-action@v4
+        if: github.event_name == 'pull_request'
+        with:
+          platforms: arm64
+
+      - uses: docker/setup-buildx-action@v4
+        if: github.event_name == 'pull_request'
+
+      - name: Build both image platforms
+        if: github.event_name == 'pull_request'
+        uses: docker/build-push-action@v7
+        with:
+          platforms: linux/amd64,linux/arm64
+          context: ilivalidator-web-service-server
+          file: ilivalidator-web-service-server/Dockerfile.jvm
+          pull: true
+          push: false
+
+      - uses: actions/upload-artifact@v7
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        with:
+          name: server-jar
+          path: ilivalidator-web-service-server/target/ilivalidator-web-service-server-*.jar
+          if-no-files-found: error
+
+  publish:
+    needs: build-jvm
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
     runs-on: ubuntu-latest
 
     permissions:
       contents: read
       packages: write
 
+    env:
+      IMAGE: sogis/ilivalidator-web-service
+      VERSION: '3.0'
+
     steps:
-
-      - name: Print new build number
-        run: echo "Build number is $BUILD_NUMBER"
-
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v7
         with:
-          fetch-depth: 0
+          persist-credentials: false
 
-      - uses: actions/setup-java@v3
+      - uses: actions/download-artifact@v8
         with:
-          java-version: '21'
-          distribution: 'temurin'
-          cache: 'maven'
+          name: server-jar
+          path: ilivalidator-web-service-server/target
 
-      - name: Test and build Jar
-        run: |
-          ./mvnw -Penv-test clean test -DexcludedGroups="docker"
-          ./mvnw -Penv-prod package -DskipTests
-          ls -la ilivalidator-web-service-server/target
-
-      - uses: actions/upload-artifact@v4
-        if: ${{ failure() }}
+      - uses: docker/setup-qemu-action@v4
         with:
-          name: reports-jar
-          path: ilivalidator-web-service-server/target/surefire-reports/
+          platforms: arm64
 
-      - name: List Docker images
-        run: |
-          docker images
+      - uses: docker/setup-buildx-action@v4
 
-      - name: Test Docker image
-        id: dockerTest
-        run: ./mvnw test -Dgroups="docker"
-
-      - uses: actions/upload-artifact@v4
-        if: ${{ failure() }}
-        with:
-          name: reports-docker
-          path: ilivalidator-web-service-server/target/surefire-reports/
-
-      - name: Login to Docker Container Registry
-        uses: docker/login-action@v2
+      - name: Login to Docker Hub
+        if: ${{ !env.ACT }}
+        uses: docker/login-action@v4
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
-        if: ${{ (github.ref == 'refs/heads/main') && (github.event_name != 'pull_request') && !env.ACT }}
 
       - name: Login to GitHub Container Registry
-        uses: docker/login-action@v2
+        if: ${{ !env.ACT }}
+        uses: docker/login-action@v4
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-        if: ${{ (github.ref == 'refs/heads/main') && (github.event_name != 'pull_request') && !env.ACT }}
 
-      - name: Set up QEMU for amd64 and arm64
-        uses: docker/setup-qemu-action@v2
+      - name: Build and publish both image platforms
+        if: ${{ !env.ACT }}
+        uses: docker/build-push-action@v7
         with:
-          platforms: linux/amd64,linux/arm64
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
-
-      - name: Multi-platform build and push to Docker Container Registry and Github Container Registry
-        if: always() && (steps.dockerTest.outcome == 'success')
-        uses: docker/build-push-action@v2
-        with:
-          cache-from: |
-            ${{ env.DOCKER_ACCOUNT }}/${{ env.DOCKER_REPO }}:cache
-          cache-to: |
-            ${{ env.DOCKER_ACCOUNT }}/${{ env.DOCKER_REPO }}:cache
+          cache-from: type=registry,ref=${{ env.IMAGE }}:cache
+          cache-to: type=registry,ref=${{ env.IMAGE }}:cache
           platforms: linux/amd64,linux/arm64
           context: ilivalidator-web-service-server
           file: ilivalidator-web-service-server/Dockerfile.jvm
           pull: true
-          push: ${{ (github.ref == 'refs/heads/main') && (github.event_name != 'pull_request') && !env.ACT }}
+          push: true
           tags: |
-            ${{ env.DOCKER_ACCOUNT }}/${{ env.DOCKER_REPO }}:latest
-            ${{ env.DOCKER_ACCOUNT }}/${{ env.DOCKER_REPO }}:${{ env.MAJOR_NUMBER }}.${{ env.MINOR_NUMBER }}.${{ env.BUILD_NUMBER }}
-            ${{ env.DOCKER_ACCOUNT }}/${{ env.DOCKER_REPO }}:${{ env.MAJOR_NUMBER }}.${{ env.MINOR_NUMBER }}
-            ${{ env.DOCKER_ACCOUNT }}/${{ env.DOCKER_REPO }}:${{ env.MAJOR_NUMBER }}
-            ghcr.io/${{ env.DOCKER_ACCOUNT }}/${{ env.DOCKER_REPO }}:latest
-            ghcr.io/${{ env.DOCKER_ACCOUNT }}/${{ env.DOCKER_REPO }}:${{ env.MAJOR_NUMBER }}.${{ env.MINOR_NUMBER }}.${{ env.BUILD_NUMBER }}
-            ghcr.io/${{ env.DOCKER_ACCOUNT }}/${{ env.DOCKER_REPO }}:${{ env.MAJOR_NUMBER }}.${{ env.MINOR_NUMBER }}
-            ghcr.io/${{ env.DOCKER_ACCOUNT }}/${{ env.DOCKER_REPO }}:${{ env.MAJOR_NUMBER }}
+            ${{ env.IMAGE }}:latest
+            ${{ env.IMAGE }}:${{ env.VERSION }}.${{ github.run_number }}
+            ${{ env.IMAGE }}:${{ env.VERSION }}
+            ${{ env.IMAGE }}:3
+            ghcr.io/${{ env.IMAGE }}:latest
+            ghcr.io/${{ env.IMAGE }}:${{ env.VERSION }}.${{ github.run_number }}
+            ghcr.io/${{ env.IMAGE }}:${{ env.VERSION }}
+            ghcr.io/${{ env.IMAGE }}:3
           labels: |
-            "commit=${{ github.sha }}"
+            commit=${{ github.sha }}
